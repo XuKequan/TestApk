@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#ff7088">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="亲喂记录">
+<title>母乳亲喂记录</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  :root{
+    --bg:#fff5f3; --card:#ffffff; --ink:#3a2e2e; --sub:#9a8a8a;
+    --accent:#ff7088; --accent-d:#f2516c; --line:#f1e3df;
+    --L:#5b8def; --R:#ff7eb3; --B:#9b6dd6;
+    --shadow:0 8px 24px rgba(255,112,136,.12);
+    --radius:22px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#1a1316; --card:#271d21; --ink:#f3e9e9; --sub:#a79293;
+      --line:#3a2c30; --shadow:0 8px 24px rgba(0,0,0,.35);
+    }
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--bg); color:var(--ink);
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:520px;margin:0 auto;padding:18px 16px 40px;}
+  header{display:flex;align-items:center;justify-content:space-between;margin:6px 2px 16px;}
+  header h1{font-size:21px;margin:0;font-weight:700;letter-spacing:.5px;}
+  header .sub{font-size:12px;color:var(--sub);margin-top:2px;}
+  .iconbtn{
+    border:none;background:var(--card);color:var(--ink);
+    border-radius:14px;padding:9px 14px;font-size:14px;font-weight:600;
+    box-shadow:var(--shadow);cursor:pointer;
+  }
+  /* timer card */
+  .timer{
+    background:linear-gradient(160deg,var(--accent),var(--accent-d));
+    border-radius:var(--radius);padding:22px 20px 24px;color:#fff;
+    box-shadow:var(--shadow);text-align:center;position:relative;overflow:hidden;
+  }
+  .timer .label{font-size:13px;opacity:.9;}
+  .clock{font-size:54px;font-weight:800;letter-spacing:1px;margin:8px 0 4px;font-variant-numeric:tabular-nums;}
+  .last{font-size:13px;opacity:.92;min-height:18px;}
+  .sides{display:flex;gap:10px;justify-content:center;margin:18px 0 20px;}
+  .side{
+    flex:1;max-width:130px;border:2px solid rgba(255,255,255,.55);
+    background:rgba(255,255,255,.12);color:#fff;border-radius:16px;
+    padding:12px 0;font-size:15px;font-weight:700;cursor:pointer;
+    transition:.15s;user-select:none;
+  }
+  .side small{display:block;font-size:11px;font-weight:500;opacity:.85;margin-top:2px;}
+  .side.on{background:#fff;color:var(--accent-d);border-color:#fff;}
+  .mainbtn{
+    width:100%;border:none;border-radius:18px;padding:17px 0;font-size:18px;
+    font-weight:800;cursor:pointer;background:#fff;color:var(--accent-d);
+    box-shadow:0 6px 16px rgba(0,0,0,.12);transition:.12s;
+  }
+  .mainbtn:active{transform:scale(.98);}
+  .mainbtn.stop{background:rgba(0,0,0,.18);color:#fff;}
+  /* stats */
+  .stats{display:flex;gap:12px;margin:18px 0;}
+  .stat{flex:1;background:var(--card);border-radius:18px;padding:14px 12px;text-align:center;box-shadow:var(--shadow);}
+  .stat .n{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;}
+  .stat .t{font-size:12px;color:var(--sub);margin-top:3px;}
+  .stat .d{font-size:12px;color:var(--accent);margin-top:4px;font-weight:600;}
+  /* history */
+  .hist h2{font-size:16px;margin:22px 4px 12px;display:flex;justify-content:space-between;align-items:center;}
+  .hist h2 .cnt{font-size:13px;color:var(--sub);font-weight:500;}
+  .day{margin-bottom:8px;}
+  .day .dh{font-size:13px;color:var(--sub);font-weight:600;padding:6px 4px;}
+  .item{
+    background:var(--card);border-radius:16px;padding:13px 14px;margin-bottom:10px;
+    display:flex;align-items:center;gap:12px;box-shadow:var(--shadow);
+  }
+  .badge{
+    width:40px;height:40px;border-radius:12px;flex:none;display:flex;
+    align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:15px;
+  }
+  .badge.L{background:var(--L);} .badge.R{background:var(--R);} .badge.B{background:var(--B);}
+  .item .info{flex:1;min-width:0;}
+  .item .time{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;}
+  .item .meta{font-size:12px;color:var(--sub);margin-top:2px;}
+  .item .dur{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .del{
+    border:none;background:transparent;color:var(--sub);font-size:20px;
+    padding:6px 8px;cursor:pointer;border-radius:10px;flex:none;
+  }
+  .del:active{background:var(--line);}
+  .empty{text-align:center;color:var(--sub);padding:40px 0;font-size:14px;}
+  /* footer */
+  .foot{display:flex;gap:12px;margin-top:26px;justify-content:center;}
+  .foot button{
+    border:none;background:transparent;color:var(--sub);font-size:13px;
+    padding:8px 12px;cursor:pointer;text-decoration:underline;
+  }
+  /* modal */
+  .overlay{
+    position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;
+    align-items:center;justify-content:center;padding:20px;z-index:50;
+  }
+  .overlay.show{display:flex;}
+  .modal{background:var(--card);border-radius:20px;padding:22px;width:100%;max-width:380px;box-shadow:var(--shadow);}
+  .modal h3{margin:0 0 16px;font-size:18px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:13px;color:var(--sub);margin-bottom:6px;}
+  .field input,.field select{
+    width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;
+    font-size:15px;background:var(--bg);color:var(--ink);
+    font-family:inherit;
+  }
+  .seg{display:flex;gap:8px;}
+  .seg button{flex:1;padding:11px 0;border:1px solid var(--line);background:var(--bg);
+    border-radius:12px;font-size:15px;font-weight:700;color:var(--ink);cursor:pointer;}
+  .seg button.on{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .mrow{display:flex;gap:10px;}
+  .mrow .field{flex:1;}
+  .modal .acts{display:flex;gap:10px;margin-top:8px;}
+  .modal .acts button{flex:1;padding:13px 0;border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;}
+  .btn-ok{background:var(--accent);color:#fff;}
+  .btn-cancel{background:var(--line);color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>母乳亲喂记录</h1>
+      <div class="sub">轻触开始，记录每一次喂养</div>
+    </div>
+    <button class="iconbtn" id="addBtn">＋ 补记</button>
+  </header>
+
+  <section class="timer">
+    <div class="label" id="timerLabel">准备开始</div>
+    <div class="clock" id="clock">00:00:00</div>
+    <div class="last" id="lastLine"></div>
+    <div class="sides" id="sides">
+      <div class="side" data-side="L">左乳<small>Left</small></div>
+      <div class="side" data-side="R">右乳<small>Right</small></div>
+      <div class="side" data-side="B">双侧<small>Both</small></div>
+    </div>
+    <button class="mainbtn" id="mainBtn">开始亲喂</button>
+  </section>
+
+  <section class="stats">
+    <div class="stat"><div class="n" id="stTodayN">0</div><div class="t">今日次数</div><div class="d" id="stTodayD">0分</div></div>
+    <div class="stat"><div class="n" id="stYesN">0</div><div class="t">昨日次数</div><div class="d" id="stYesD">0分</div></div>
+    <div class="stat"><div class="n" id="stAllN">0</div><div class="t">总计次数</div><div class="d" id="stAllD">0分</div></div>
+  </section>
+
+  <section class="hist">
+    <h2>喂养历史 <span class="cnt" id="histCnt"></span></h2>
+    <div id="histList"></div>
+  </section>
+
+  <div class="foot">
+    <button id="exportBtn">导出备份</button>
+    <button id="clearBtn">清空数据</button>
+  </div>
+</div>
+
+<!-- 补记弹窗 -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h3>补记一次喂养</h3>
+    <div class="field">
+      <label>日期</label>
+      <input type="date" id="mDate">
+    </div>
+    <div class="mrow">
+      <div class="field">
+        <label>开始时间</label>
+        <input type="time" id="mTime" step="60">
+      </div>
+      <div class="field">
+        <label>时长（分钟）</label>
+        <input type="number" id="mDur" min="1" max="180" value="15" inputmode="numeric">
+      </div>
+    </div>
+    <div class="field">
+      <label>乳房</label>
+      <div class="seg" id="mSeg">
+        <button data-side="L">左乳</button>
+        <button data-side="R">右乳</button>
+        <button data-side="B">双侧</button>
+      </div>
+    </div>
+    <div class="acts">
+      <button class="btn-cancel" id="mCancel">取消</button>
+      <button class="btn-ok" id="mSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const KEY = 'bf_sessions_v1';
+const SIDE_NAME = {L:'左乳', R:'右乳', B:'双侧'};
+let sessions = load();
+let selectedSide = 'L';
+let tick = null;
+
+function load(){ try{ return JSON.parse(localStorage.getItem(KEY)) || []; }catch(e){ return []; } }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(sessions)); }catch(e){ console.warn('save failed', e); } }
+function getActive(){ return sessions.find(s => s.end === null) || null; }
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function buzz(ms){ try{ navigator.vibrate && navigator.vibrate(ms); }catch(e){} }
+
+function startOfDay(ts){ const d = new Date(ts); d.setHours(0,0,0,0); return d.getTime(); }
+function isSameDay(a,b){ return startOfDay(a) === startOfDay(b); }
+
+function pad(n){ return n<10 ? '0'+n : ''+n; }
+function fmtHMS(ms){
+  let s = Math.floor(ms/1000);
+  const h = Math.floor(s/3600); s -= h*3600;
+  const m = Math.floor(s/60); s -= m*60;
+  return pad(h)+':'+pad(m)+':'+pad(s);
+}
+function fmtDur(ms){
+  const m = Math.round(ms/60000);
+  if(m < 60) return m + '分';
+  const h = Math.floor(m/60), r = m%60;
+  return r ? (h+'小时'+r+'分') : (h+'小时');
+}
+function fmtClock(ts){
+  const d = new Date(ts);
+  return pad(d.getHours())+':'+pad(d.getMinutes());
+}
+function fmtRelative(ts){
+  const diff = Date.now() - ts;
+  if(diff < 60000) return '刚刚';
+  if(diff < 3600000) return Math.floor(diff/60000)+'分钟前';
+  if(diff < 86400000) return Math.floor(diff/3600000)+'小时前';
+  return Math.floor(diff/86400000)+'天前';
+}
+function dayLabel(ts){
+  const today = startOfDay(Date.now());
+  const d = startOfDay(ts);
+  if(d === today) return '今天';
+  if(d === today - 86400000) return '昨天';
+  const dt = new Date(ts);
+  return (dt.getMonth()+1)+'月'+dt.getDate()+'日';
+}
+
+/* ---------- 渲染 ---------- */
+function render(){
+  renderTimer();
+  renderStats();
+  renderHistory();
+}
+function renderTimer(){
+  const active = getActive();
+  const label = document.getElementById('timerLabel');
+  const clock = document.getElementById('clock');
+  const last = document.getElementById('lastLine');
+  const btn = document.getElementById('mainBtn');
+  const sides = document.getElementById('sides').children;
+
+  if(active){
+    label.textContent = '亲喂中 · ' + SIDE_NAME[active.side];
+    clock.textContent = fmtHMS(Date.now() - active.start);
+    last.textContent = '开始于 ' + fmtClock(active.start);
+    btn.textContent = '结束亲喂';
+    btn.classList.add('stop');
+    for(const el of sides){ el.classList.remove('on'); el.style.pointerEvents='none'; el.style.opacity='.5'; }
+    if(!tick) tick = setInterval(()=>{ clock.textContent = fmtHMS(Date.now()-active.start); }, 1000);
+  } else {
+    if(tick){ clearInterval(tick); tick=null; }
+    label.textContent = '准备开始';
+    clock.textContent = '00:00:00';
+    btn.textContent = '开始亲喂';
+    btn.classList.remove('stop');
+    for(const el of sides){
+      el.classList.toggle('on', el.dataset.side === selectedSide);
+      el.style.pointerEvents=''; el.style.opacity='';
+    }
+    const done = sessions.filter(s=>s.end!==null);
+    if(done.length){
+      const lastS = done[done.length-1];
+      last.textContent = '上次：'+fmtRelative(lastS.end)+' · '+fmtDur(lastS.end-lastS.start);
+    } else { last.textContent = '还没有记录，开始第一次吧'; }
+  }
+}
+function renderStats(){
+  const done = sessions.filter(s=>s.end!==null);
+  const today = done.filter(s=>isSameDay(s.end,Date.now()));
+  const yes = done.filter(s=>isSameDay(s.end,Date.now()-86400000));
+  const sum = arr => arr.reduce((a,s)=>a+(s.end-s.start),0);
+  document.getElementById('stTodayN').textContent = today.length;
+  document.getElementById('stTodayD').textContent = fmtDur(sum(today));
+  document.getElementById('stYesN').textContent = yes.length;
+  document.getElementById('stYesD').textContent = fmtDur(sum(yes));
+  document.getElementById('stAllN').textContent = done.length;
+  document.getElementById('stAllD').textContent = fmtDur(sum(done));
+}
+function renderHistory(){
+  const list = document.getElementById('histList');
+  const done = sessions.filter(s=>s.end!==null).sort((a,b)=>b.start-a.start);
+  document.getElementById('histCnt').textContent = done.length ? ('共 '+done.length+' 次') : '';
+  if(!done.length){ list.innerHTML = '<div class="empty">还没有记录<br>点击下方按钮开始第一次亲喂 🤱</div>'; return; }
+  let html = '', curDay = null;
+  for(const s of done){
+    const dl = dayLabel(s.start);
+    if(dl !== curDay){ curDay = dl; html += '<div class="day"><div class="dh">'+dl+'</div>'; }
+    const sameDay = isSameDay(s.start, s.end);
+    const timeStr = sameDay ? (fmtClock(s.start)+' – '+fmtClock(s.end)) : (fmtClock(s.start)+' 起');
+    html += '<div class="item">'
+      + '<div class="badge '+s.side+'">'+s.side+'</div>'
+      + '<div class="info"><div class="time">'+timeStr+'</div>'
+      + '<div class="meta">'+SIDE_NAME[s.side]+'</div></div>'
+      + '<div class="dur">'+fmtDur(s.end-s.start)+'</div>'
+      + '<button class="del" data-id="'+s.id+'" aria-label="删除">×</button>'
+      + '</div>';
+  }
+  list.innerHTML = html;
+  list.querySelectorAll('.del').forEach(b=>{
+    b.onclick = ()=>{
+      if(confirm('删除这条记录？')){
+        sessions = sessions.filter(x=>x.id!==b.dataset.id);
+        save(); render();
+      }
+    };
+  });
+}
+
+/* ---------- 交互 ---------- */
+document.getElementById('sides').addEventListener('click', e=>{
+  const el = e.target.closest('.side'); if(!el || getActive()) return;
+  selectedSide = el.dataset.side; buzz(15); renderTimer();
+});
+document.getElementById('mainBtn').addEventListener('click', ()=>{
+  const active = getActive();
+  if(active){
+    active.end = Date.now(); buzz([20,40,20]); save(); render();
+  } else {
+    sessions.push({id:uid(), start:Date.now(), end:null, side:selectedSide});
+    buzz(30); save(); render();
+  }
+});
+
+/* 补记弹窗 */
+let mSide = 'L';
+const overlay = document.getElementById('overlay');
+function openModal(){
+  const now = new Date();
+  document.getElementById('mDate').value = now.toISOString().slice(0,10);
+  document.getElementById('mTime').value = fmtClock(now.getTime());
+  mSide = 'L';
+  document.querySelectorAll('#mSeg button').forEach(b=>b.classList.toggle('on', b.dataset.side==='L'));
+  overlay.classList.add('show');
+}
+function closeModal(){ overlay.classList.remove('show'); }
+document.getElementById('addBtn').addEventListener('click', openModal);
+document.getElementById('mCancel').addEventListener('click', closeModal);
+overlay.addEventListener('click', e=>{ if(e.target===overlay) closeModal(); });
+document.querySelectorAll('#mSeg button').forEach(b=>{
+  b.onclick = ()=>{ mSide=b.dataset.side; document.querySelectorAll('#mSeg button').forEach(x=>x.classList.toggle('on', x===b)); };
+});
+document.getElementById('mSave').addEventListener('click', ()=>{
+  const date = document.getElementById('mDate').value;
+  const time = document.getElementById('mTime').value;
+  const dur = parseInt(document.getElementById('mDur').value,10);
+  if(!date || !time || !dur || dur<1){ alert('请填写完整信息'); return; }
+  const start = new Date(date+'T'+time+':00').getTime();
+  if(isNaN(start)){ alert('时间格式有误'); return; }
+  const end = start + dur*60000;
+  if(end > Date.now()+60000){ alert('结束时间不能晚于现在'); return; }
+  sessions.push({id:uid(), start, end, side:mSide});
+  save(); render(); closeModal();
+});
+
+/* 导出 / 清空 */
+document.getElementById('exportBtn').addEventListener('click', ()=>{
+  const blob = new Blob([JSON.stringify(sessions,null,2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '母乳亲喂记录_'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+document.getElementById('clearBtn').addEventListener('click', ()=>{
+  if(confirm('确定清空全部记录？此操作不可恢复。')){
+    sessions = []; selectedSide='L'; save(); render();
+  }
+});
+
+/* PWA */
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+}
+
+render();
+</script>
+</body>
+</html>
