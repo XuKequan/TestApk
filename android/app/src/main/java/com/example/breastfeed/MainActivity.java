@@ -1,9 +1,11 @@
 package com.example.breastfeed;
 
 import android.app.Activity;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.view.View;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -89,6 +91,37 @@ public class MainActivity extends Activity {
                 runOnUiThread(() -> Toast.makeText(MainActivity.this,
                         "导出失败：" + (msg == null ? "未知错误" : msg), Toast.LENGTH_LONG).show());
             }
+        }
+
+        /** 网页调用 window.AndroidBridge.setBarColors(status, nav, lightIcons) 同步状态栏/导航栏颜色 */
+        @JavascriptInterface
+        public void setBarColors(String statusColor, String navColor, boolean lightIcons) {
+            try {
+                final int sc = Color.parseColor(statusColor);
+                final int nc = Color.parseColor(navColor);
+                final boolean li = lightIcons;
+                final android.view.Window w = MainActivity.this.getWindow();
+                MainActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        w.setStatusBarColor(sc);
+                        w.setNavigationBarColor(nc);
+                        int vis = w.getDecorView().getSystemUiVisibility();
+                        if (li) {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+                                vis |= View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                                vis |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+                        } else {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+                                vis &= ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                                vis &= ~View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+                        }
+                        w.getDecorView().setSystemUiVisibility(vis);
+                    }
+                });
+            } catch (Exception e) { }
         }
     }
 
