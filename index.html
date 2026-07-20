@@ -145,10 +145,11 @@
   .btn-danger{background:#ff5a5a;color:#fff;}
   /* wheel picker */
   .wheels{display:flex;align-items:center;justify-content:center;gap:8px;margin:6px 0 4px;position:relative;}
-  .wheel{height:160px;width:78px;overflow-y:auto;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch;position:relative;}
+  .wheel{height:200px;width:78px;overflow-y:auto;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch;position:relative;}
+  .wheel::-webkit-scrollbar{display:none;}
   .witem{height:40px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;scroll-snap-align:center;color:var(--sub);}
-  .witem.on{color:var(--ink);font-size:27px;}
-  .wpad{height:40px;}
+  .witem.on{color:var(--accent-d);font-size:28px;font-weight:800;}
+  .wpad{height:80px;}
   .wcolon{font-size:26px;font-weight:800;color:var(--ink);}
   .wsel{position:absolute;top:50%;left:8px;right:8px;height:40px;transform:translateY(-50%);
     border-top:1px solid var(--line);border-bottom:1px solid var(--line);pointer-events:none;border-radius:8px;background:rgba(255,112,136,.06);}
@@ -294,13 +295,15 @@
       <label>日期</label>
       <input type="date" id="eDate">
     </div>
-    <div class="field" id="eStartField">
-      <label>开始时间</label>
-      <div class="tfield" id="eStartD">09:00</div>
-    </div>
-    <div class="field" id="eDurField">
-      <label>时长（分钟）</label>
-      <input type="number" id="eDur" min="1" max="600" value="15" inputmode="numeric">
+    <div class="mrow" id="eTimeRow">
+      <div class="field" id="eStartField">
+        <label>开始时间</label>
+        <div class="tfield" id="eStartD">09:00</div>
+      </div>
+      <div class="field" id="eEndField">
+        <label>结束时间</label>
+        <div class="tfield" id="eEndD">09:15</div>
+      </div>
     </div>
     <div class="field" id="eVolField" style="display:none">
       <label>容量（毫升）</label>
@@ -384,6 +387,14 @@ function fmtHM(ms){
   const m = Math.max(0, Math.round(ms/60000));
   return Math.floor(m/60) + ':' + pad(m%60);
 }
+// 时长显示为「分秒」带单位，如 10分15秒；超过1小时则加「时」
+function fmtMinSec(ms){
+  let s = Math.max(0, Math.round(ms/1000));
+  const h = Math.floor(s/3600); s -= h*3600;
+  const m = Math.floor(s/60); s -= m*60;
+  if(h>0) return h+'时'+m+'分'+s+'秒';
+  return m+'分'+s+'秒';
+}
 function fmtClock(ts){
   const d = new Date(ts);
   return pad(d.getHours())+':'+pad(d.getMinutes());
@@ -444,19 +455,22 @@ function buildWheel(wheel, max){
   wheel.onscroll = ()=> markWheel(wheel, max);
 }
 function markWheel(wheel, max){
-  const idx = Math.min(max, Math.max(0, Math.round(wheel.scrollTop/40)-1));
+  const idx = Math.min(max, Math.max(0, Math.round(wheel.scrollTop/40)));
   wheel.querySelectorAll('.witem').forEach(el=>{
     el.classList.toggle('on', parseInt(el.dataset.v,10)===idx);
   });
 }
-function wheelVal(wheel, max){ return Math.min(max, Math.max(0, Math.round(wheel.scrollTop/40)-1)); }
-function setWheel(wheel, val){ wheel.scrollTop = (val+1)*40; }
+function wheelVal(wheel, max){ return Math.min(max, Math.max(0, Math.round(wheel.scrollTop/40))); }
+function setWheel(wheel, val){ wheel.scrollTop = val*40; }
 function openPicker(initH, initM, apply){
   pickerApply = apply;
   const wh = document.getElementById('wheelH'), wm = document.getElementById('wheelM');
-  setWheel(wh, initH); setWheel(wm, initM);
-  markWheel(wh, 23); markWheel(wm, 59);
   document.getElementById('pickerOverlay').classList.add('show');
+  // 弹窗显示后（有布局）再定位滚轮，保证高亮与选中带精确对齐
+  requestAnimationFrame(()=>{
+    setWheel(wh, initH); setWheel(wm, initM);
+    markWheel(wh, 23); markWheel(wm, 59);
+  });
 }
 buildWheel(document.getElementById('wheelH'), 23);
 buildWheel(document.getElementById('wheelM'), 59);
@@ -497,7 +511,7 @@ function renderTimer(){
     const done = sessions.filter(s=>s.end!==null);
     if(done.length){
       const lastS = done[done.length-1];
-      last.textContent = '上次：'+fmtRelative(lastS.end)+' · '+fmtHM(netDuration(lastS));
+      last.textContent = '上次：'+fmtRelative(lastS.end)+' · '+fmtMinSec(netDuration(lastS));
     } else { last.textContent = '还没有记录，开始第一次吧'; }
     return;
   }
@@ -569,8 +583,8 @@ function renderHistory(){
       timeStr = sameDay ? (fmtClock(s.start)+' – '+(active ? '进行中' : fmtClock(s.end)))
                          : (fmtClock(s.start)+' 起');
       const paused = (s.pausedTotal||0) + (s.pausedAt ? (Date.now()-s.pausedAt) : 0);
-      meta = SIDE_NAME[s.side] + (paused>60000 ? ' · 含暂停'+fmtHM(paused) : '');
-      durStr = active ? fmtHM(liveElapsed(s)) : fmtHM(netDuration(s));
+      meta = SIDE_NAME[s.side] + (paused>60000 ? ' · 含暂停'+fmtMinSec(paused) : '');
+      durStr = active ? fmtMinSec(liveElapsed(s)) : fmtMinSec(netDuration(s));
     }
     html += '<div class="item" data-id="'+s.id+'">'
       + badge
@@ -630,6 +644,7 @@ bindTimeField('mStartD', 9, 0);
 bindTimeField('mEndD', 9, 15);
 bindTimeField('bTimeD', 9, 0);
 bindTimeField('eStartD', 9, 0);
+bindTimeField('eEndD', 9, 15);
 
 /* ---------- 补记（亲喂） ---------- */
 let mSide = 'L';
@@ -715,8 +730,8 @@ function openDetail(id){
   } else {
     rows += '<div class="detail-row"><span class="k">开始</span><span class="v">'+fmtClock(s.start)+'</span></div>';
     rows += '<div class="detail-row"><span class="k">结束</span><span class="v">'+fmtClock(s.end)+'</span></div>';
-    rows += '<div class="detail-row"><span class="k">时长</span><span class="v">'+fmtHM(netDuration(s))+'</span></div>';
-    if(paused>60000) rows += '<div class="detail-row"><span class="k">暂停</span><span class="v">'+fmtHM(paused)+'</span></div>';
+    rows += '<div class="detail-row"><span class="k">时长</span><span class="v">'+fmtMinSec(netDuration(s))+'</span></div>';
+    if(paused>60000) rows += '<div class="detail-row"><span class="k">暂停</span><span class="v">'+fmtMinSec(paused)+'</span></div>';
     rows += '<div class="detail-row"><span class="k">乳房</span><span class="v">'+SIDE_NAME[s.side]+'</span></div>';
   }
   document.getElementById('detailBody').innerHTML = rows;
@@ -740,17 +755,23 @@ function openEdit(id){
   editId = id;
   const isBottle = s.type === 'bottle';
   document.getElementById('eDate').value = fmtDate(s.start);
-  timeFields['eStartD'].h = new Date(s.start).getHours();
-  timeFields['eStartD'].m = new Date(s.start).getMinutes();
-  document.getElementById('eStartD').textContent = pad(timeFields['eStartD'].h)+':'+pad(timeFields['eStartD'].m);
-  // 切换字段显示
-  document.getElementById('eDurField').style.display = isBottle ? 'none' : '';
+  // 自动带出原开始时间
+  const sd = new Date(s.start);
+  timeFields['eStartD'].h = sd.getHours();
+  timeFields['eStartD'].m = sd.getMinutes();
+  document.getElementById('eStartD').textContent = pad(sd.getHours())+':'+pad(sd.getMinutes());
+  // 自动带出原结束时间（无结束则沿用开始）
+  const ed = new Date(s.end != null ? s.end : s.start);
+  timeFields['eEndD'].h = ed.getHours();
+  timeFields['eEndD'].m = ed.getMinutes();
+  document.getElementById('eEndD').textContent = pad(ed.getHours())+':'+pad(ed.getMinutes());
+  // 切换字段显示：瓶喂无结束时间/乳房，有容量
+  document.getElementById('eEndField').style.display = isBottle ? 'none' : '';
   document.getElementById('eVolField').style.display = isBottle ? '' : 'none';
   document.getElementById('eSideField').style.display = isBottle ? 'none' : '';
   if(isBottle){
     document.getElementById('eVol').value = s.volume;
   } else {
-    document.getElementById('eDur').value = Math.max(1, Math.round(netDuration(s)/60000));
     document.querySelectorAll('#eSeg button').forEach(b=>b.classList.toggle('on', b.dataset.side===s.side));
   }
   editOverlay.classList.add('show');
@@ -773,9 +794,10 @@ document.getElementById('eSave').addEventListener('click', ()=>{
     if(start > Date.now()+60000){ toast('时间不能晚于现在'); return; }
     s.start = start; s.end = start; s.volume = vol;
   } else {
-    const dur = parseInt(document.getElementById('eDur').value,10);
-    if(!dur||dur<1){ toast('请填写时长'); return; }
-    const end = start + dur*60000;
+    const eh = timeFields['eEndD'].h, em = timeFields['eEndD'].m;
+    const end = new Date(date+'T'+pad(eh)+':'+pad(em)+':00').getTime();
+    if(isNaN(end)){ toast('时间格式有误'); return; }
+    if(end <= start){ toast('结束时间需晚于开始时间'); return; }
     if(end > Date.now()+60000){ toast('结束时间不能晚于现在'); return; }
     let side = document.querySelector('#eSeg button.on');
     s.start = start; s.end = end; s.side = side ? side.dataset.side : s.side;
