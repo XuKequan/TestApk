@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#ff7088">
+<meta name="theme-color" content="#fff5f3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="喂养记录">
@@ -15,20 +15,21 @@
 (function(){
   try{
     var t = localStorage.getItem('bf_theme');
-    var dark = (t==='dark') || (!t && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
+    var isNight = (function(){ var h=new Date().getHours(); return (h<7||h>=19); })();
+    var dark = (t==='dark') || (!t && isNight);
     var el = document.documentElement;
     if(t==='dark' || t==='light') el.setAttribute('data-theme', t);
     else if(dark) el.setAttribute('data-theme','dark');
     var meta = document.querySelector('meta[name="theme-color"]');
     var st = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
     if(dark){ if(meta) meta.setAttribute('content','#1f1a17'); if(st) st.setAttribute('content','black'); }
-    else { if(meta) meta.setAttribute('content','#ff7088'); if(st) st.setAttribute('content','default'); }
-    /* 同步安卓原生状态栏/导航栏颜色，避免深色模式下仍是粉色 */
+    else { if(meta) meta.setAttribute('content','#fff5f3'); if(st) st.setAttribute('content','default'); }
+    /* 同步安卓原生状态栏/导航栏颜色：明亮模式=背景色+深色图标；深色模式=暖黑底+浅色图标 */
     try{
       var ab = window.AndroidBridge;
       if(ab && typeof ab.setBarColors === 'function'){
         if(dark) ab.setBarColors('#1f1a17','#1f1a17', false);
-        else ab.setBarColors('#ff7088','#fff5f3', true);
+        else ab.setBarColors('#fff5f3','#fff5f3', true);
       }
     }catch(e2){}
   }catch(e){}
@@ -926,16 +927,20 @@ if('serviceWorker' in navigator){
 
 /* ---------- 白天 / 黑夜模式 ---------- */
 const THEME_KEY = 'bf_theme';
+function isNight(){
+  const h = new Date().getHours();
+  return (h < 7 || h >= 19);
+}
 function currentTheme(){
   const t = document.documentElement.dataset.theme;
   if(t==='dark' || t==='light') return t;
-  return (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+  return isNight() ? 'dark' : 'light';
 }
 function applyThemeMeta(theme){
   const dark = (theme === 'dark');
   const meta = document.querySelector('meta[name="theme-color"]');
   const st = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
-  if(meta) meta.setAttribute('content', dark ? '#1f1a17' : '#ff7088');
+  if(meta) meta.setAttribute('content', dark ? '#1f1a17' : '#fff5f3');
   if(st) st.setAttribute('content', dark ? 'black' : 'default');
 }
 /* 通知安卓原生状态栏/导航栏跟随主题（深色=暖黑底+浅色图标；浅色=粉底+深色图标） */
@@ -945,7 +950,7 @@ function syncNativeBars(){
     if(!b || typeof b.setBarColors !== 'function') return;
     const dark = (currentTheme() === 'dark');
     if(dark) b.setBarColors('#1f1a17','#1f1a17', false);
-    else b.setBarColors('#ff7088','#fff5f3', true);
+    else b.setBarColors('#fff5f3','#fff5f3', true);
   }catch(e){}
 }
 function updateThemeBtn(){
