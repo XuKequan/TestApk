@@ -23,6 +23,14 @@
     var st = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
     if(dark){ if(meta) meta.setAttribute('content','#1f1a17'); if(st) st.setAttribute('content','black'); }
     else { if(meta) meta.setAttribute('content','#ff7088'); if(st) st.setAttribute('content','default'); }
+    /* 同步安卓原生状态栏/导航栏颜色，避免深色模式下仍是粉色 */
+    try{
+      var ab = window.AndroidBridge;
+      if(ab && typeof ab.setBarColors === 'function'){
+        if(dark) ab.setBarColors('#1f1a17','#1f1a17', false);
+        else ab.setBarColors('#ff7088','#fff5f3', true);
+      }
+    }catch(e2){}
   }catch(e){}
 })();
 </script>
@@ -930,6 +938,16 @@ function applyThemeMeta(theme){
   if(meta) meta.setAttribute('content', dark ? '#1f1a17' : '#ff7088');
   if(st) st.setAttribute('content', dark ? 'black' : 'default');
 }
+/* 通知安卓原生状态栏/导航栏跟随主题（深色=暖黑底+浅色图标；浅色=粉底+深色图标） */
+function syncNativeBars(){
+  try{
+    const b = window.AndroidBridge;
+    if(!b || typeof b.setBarColors !== 'function') return;
+    const dark = (currentTheme() === 'dark');
+    if(dark) b.setBarColors('#1f1a17','#1f1a17', false);
+    else b.setBarColors('#ff7088','#fff5f3', true);
+  }catch(e){}
+}
 function updateThemeBtn(){
   const btn = document.getElementById('themeBtn');
   const t = currentTheme();
@@ -942,10 +960,12 @@ document.getElementById('themeBtn').addEventListener('click', ()=>{
   try{ localStorage.setItem(THEME_KEY, next); }catch(e){}
   applyThemeMeta(next);
   updateThemeBtn();
+  syncNativeBars();
   buzz(12);
 });
 // 初始化按钮状态（主题已在 <head> 内联脚本应用，避免闪烁）
 updateThemeBtn();
+syncNativeBars();
 
 render();
 </script>
