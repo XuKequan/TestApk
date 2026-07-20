@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="AppTheme" parent="android:Theme.DeviceDefault.NoActionBar">
-        <item name="android:statusBarColor">#ff7088</item>
-        <item name="android:navigationBarColor">#fff5f3</item>
+        <!-- 默认深色底（与网页深色背景一致）；浅色模式由网页通过 JS 桥改为粉色 -->
+        <item name="android:statusBarColor">#1f1a17</item>
+        <item name="android:navigationBarColor">#1f1a17</item>
     </style>
 </resources>
