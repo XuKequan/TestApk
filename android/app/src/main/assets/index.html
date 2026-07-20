@@ -6,8 +6,8 @@
 <meta name="theme-color" content="#ff7088">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="亲喂记录">
-<title>母乳亲喂记录</title>
+<meta name="apple-mobile-web-app-title" content="喂养记录">
+<title>喂养记录</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
@@ -168,7 +168,7 @@
 <div class="wrap">
   <header>
     <div>
-      <h1>母乳亲喂记录</h1>
+      <h1>喂养记录</h1>
       <div class="sub">轻触开始，记录每一次喂养</div>
     </div>
     <div class="topbtns">
@@ -182,8 +182,8 @@
     <div class="clock" id="clock">00:00:00</div>
     <div class="last" id="lastLine"></div>
     <div class="sides" id="sides">
-      <div class="side" data-side="L">左乳<small>Left</small></div>
-      <div class="side" data-side="R">右乳<small>Right</small></div>
+      <div class="side" data-side="L">左<small>Left</small></div>
+      <div class="side" data-side="R">右<small>Right</small></div>
       <div class="side" data-side="B">双侧<small>Both</small></div>
     </div>
     <div class="timerbtns">
@@ -239,8 +239,8 @@
     <div class="field">
       <label>乳房</label>
       <div class="seg" id="mSeg">
-        <button data-side="L">左乳</button>
-        <button data-side="R">右乳</button>
+        <button data-side="L">左</button>
+        <button data-side="R">右</button>
         <button data-side="B">双侧</button>
       </div>
     </div>
@@ -312,8 +312,8 @@
     <div class="field" id="eSideField">
       <label>乳房</label>
       <div class="seg" id="eSeg">
-        <button data-side="L">左乳</button>
-        <button data-side="R">右乳</button>
+        <button data-side="L">左</button>
+        <button data-side="R">右</button>
         <button data-side="B">双侧</button>
       </div>
     </div>
@@ -359,9 +359,18 @@
 
 <script>
 const KEY = 'bf_sessions_v1';
-const SIDE_NAME = {L:'左乳', R:'右乳', B:'双侧'};
+const SIDE_NAME = {L:'左', R:'右', B:'双侧'};
 let sessions = load();
-let selectedSide = 'L';
+// 根据上一次亲喂的侧别，默认取相反侧（上次左→默认右，上次右→默认左，双侧/无→左）
+function computeDefaultSide(){
+  const done = sessions.filter(s=>s.type==='nurse' && s.end!==null).sort((a,b)=>a.end-b.end);
+  if(!done.length) return 'L';
+  const last = done[done.length-1].side;
+  if(last==='L') return 'R';
+  if(last==='R') return 'L';
+  return 'L';
+}
+let selectedSide = computeDefaultSide();
 let tick = null;
 let viewDate = startOfDay(Date.now());
 let editId = null;
@@ -623,6 +632,7 @@ document.getElementById('endBtn').addEventListener('click', ()=>{
     active.pausedAt = null;
   }
   active.end = Date.now();
+  selectedSide = computeDefaultSide();
   buzz([20,40,20]); save(); render();
 });
 
@@ -838,7 +848,7 @@ document.getElementById('exportBtn').addEventListener('click', ()=>{
       const blob = new Blob([json], {type:'application/json'});
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = '母乳亲喂记录_'+fmtDate(Date.now())+'.json';
+      a.download = '喂养记录_'+fmtDate(Date.now())+'.json';
       a.click();
       URL.revokeObjectURL(a.href);
     }catch(err){ toast('导出失败：'+err.message); }
