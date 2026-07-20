@@ -18,9 +18,10 @@
     var dark = (t==='dark') || (!t && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
     var el = document.documentElement;
     if(t==='dark' || t==='light') el.setAttribute('data-theme', t);
+    else if(dark) el.setAttribute('data-theme','dark');
     var meta = document.querySelector('meta[name="theme-color"]');
     var st = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
-    if(dark){ if(meta) meta.setAttribute('content','#15110f'); if(st) st.setAttribute('content','black'); }
+    if(dark){ if(meta) meta.setAttribute('content','#1f1a17'); if(st) st.setAttribute('content','black'); }
     else { if(meta) meta.setAttribute('content','#ff7088'); if(st) st.setAttribute('content','default'); }
   }catch(e){}
 })();
@@ -32,21 +33,41 @@
     --L:#5b8def; --R:#ff7eb3; --B:#9b6dd6; --BT:#3bb6a0;
     --shadow:0 8px 24px rgba(255,112,136,.12);
     --radius:22px;
+    --accent-soft:rgba(255,112,136,.08);
     --timer-grad:linear-gradient(160deg,var(--accent),var(--accent-d));
+    --timer-ink:#fff; --timer-border:transparent;
   }
   /* 手动选择深色或跟随系统时的深色配色：降低整体亮度、柔化强调色，护眼 */
   :root[data-theme="dark"]{
-    --bg:#15110f; --card:#21191c; --ink:#f2e9e7; --sub:#b3a4a4;
-    --line:#342a2c; --shadow:0 8px 24px rgba(0,0,0,.45);
-    --timer-grad:linear-gradient(160deg,#b8445c,#922f49);
+    --bg:#1f1a17; --card:#2a231f; --ink:#ece3da; --sub:#a3948b;
+    --line:#3b322c; --shadow:0 8px 24px rgba(0,0,0,.5);
+    --accent:#e0a96d; --accent-d:#cf8f50;
+    --L:#88afc9; --R:#d99c7c; --B:#b48ac4; --BT:#7fb89a;
+    --accent-soft:rgba(224,169,109,.12);
+    --timer-grad:linear-gradient(160deg,#2a201b,#1f1a17); --timer-ink:#ece3da; --timer-border:var(--line);
   }
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
-      --bg:#15110f; --card:#21191c; --ink:#f2e9e7; --sub:#b3a4a4;
-      --line:#342a2c; --shadow:0 8px 24px rgba(0,0,0,.45);
-      --timer-grad:linear-gradient(160deg,#b8445c,#922f49);
+      --bg:#1f1a17; --card:#2a231f; --ink:#ece3da; --sub:#a3948b;
+      --line:#3b322c; --shadow:0 8px 24px rgba(0,0,0,.5);
+      --accent:#e0a96d; --accent-d:#cf8f50;
+      --L:#88afc9; --R:#d99c7c; --B:#b48ac4; --BT:#7fb89a;
+      --accent-soft:rgba(224,169,109,.12);
+      --timer-grad:linear-gradient(160deg,#2a201b,#1f1a17); --timer-ink:#ece3da; --timer-border:var(--line);
     }
   }
+  /* 深色模式：温馨暖色调（暖棕底 + 奶油字 + 暖琥珀强调），弱光下柔和护眼 */
+  :root[data-theme="dark"] .badge{color:#fbf6f0;}
+  :root[data-theme="dark"] .side{background:rgba(236,227,218,.08);color:#ece3da;border-color:rgba(236,227,218,.25);}
+  :root[data-theme="dark"] .side.on{background:var(--accent);color:#241c16;border-color:var(--accent);}
+  :root[data-theme="dark"] .mainbtn{background:var(--accent);color:#241c16;border:1px solid var(--accent);box-shadow:none;}
+  :root[data-theme="dark"] .subbtn{background:rgba(236,227,218,.10);color:#ece3da;border-color:rgba(236,227,218,.3);}
+  :root[data-theme="dark"] .subbtn.stop{background:rgba(224,169,109,.16);color:#ece3da;border-color:var(--accent);}
+  :root[data-theme="dark"] .iconbtn.bottle{background:rgba(236,227,218,.08);color:#ece3da;border:1px solid var(--line);}
+  :root[data-theme="dark"] .seg button.on{background:var(--accent);color:#241c16;border-color:var(--accent);}
+  :root[data-theme="dark"] .btn-ok{background:var(--accent);color:#241c16;}
+  :root[data-theme="dark"] .btn-danger{background:#b9584f;color:#fbf6f0;}
+  :root[data-theme="dark"] .witem.on{color:var(--accent);}
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{margin:0;padding:0;}
   body{
@@ -69,7 +90,8 @@
   /* timer card */
   .timer{
     background:var(--timer-grad);
-    border-radius:var(--radius);padding:22px 20px 24px;color:#fff;
+    border-radius:var(--radius);padding:22px 20px 24px;color:var(--timer-ink);
+    border:1px solid var(--timer-border);
     box-shadow:var(--shadow);text-align:center;position:relative;overflow:hidden;
   }
   .timer .label{font-size:13px;opacity:.9;}
@@ -175,7 +197,7 @@
   .wpad{height:80px;}
   .wcolon{font-size:26px;font-weight:800;color:var(--ink);}
   .wsel{position:absolute;top:50%;left:8px;right:8px;height:40px;transform:translateY(-50%);
-    border-top:1px solid var(--line);border-bottom:1px solid var(--line);pointer-events:none;border-radius:8px;background:rgba(255,112,136,.06);}
+    border-top:1px solid var(--line);border-bottom:1px solid var(--line);pointer-events:none;border-radius:8px;background:var(--accent-soft);}
   /* toast */
   #toast{
     position:fixed;left:50%;bottom:40px;transform:translateX(-50%) translateY(20px);
@@ -214,7 +236,7 @@
       <button class="mainbtn" id="mainBtn">开始亲喂</button>
       <div class="btnrow" id="activeBtns" style="display:none">
         <button class="subbtn" id="pauseBtn">暂停</button>
-        <button class="subbtn stop" id="endBtn" style="background:rgba(0,0,0,.18);color:#fff;">结束亲喂</button>
+        <button class="subbtn stop" id="endBtn">结束亲喂</button>
       </div>
     </div>
   </section>
@@ -905,7 +927,7 @@ function applyThemeMeta(theme){
   const dark = (theme === 'dark');
   const meta = document.querySelector('meta[name="theme-color"]');
   const st = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
-  if(meta) meta.setAttribute('content', dark ? '#15110f' : '#ff7088');
+  if(meta) meta.setAttribute('content', dark ? '#1f1a17' : '#ff7088');
   if(st) st.setAttribute('content', dark ? 'black' : 'default');
 }
 function updateThemeBtn(){
