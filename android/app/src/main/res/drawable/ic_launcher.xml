@@ -7,8 +7,20 @@
     <path
         android:fillColor="#ff7088"
         android:pathData="M50,4 A46,46 0 1,1 49.9,4 Z" />
-    <!-- 白色奶滴 -->
+    <!-- 奶嘴 -->
+    <path
+        android:fillColor="#ffd9a0"
+        android:pathData="M45,17 q5,-7 10,0 v5 h-10 z" />
+    <!-- 瓶盖圈 -->
+    <path
+        android:fillColor="#ffe3ec"
+        android:pathData="M42,22 h16 v7 h-16 z" />
+    <!-- 瓶身 -->
     <path
         android:fillColor="#ffffff"
-        android:pathData="M50,20 C36,42 30,54 30,64 a20,20 0 1,0 40,0 C70,54 64,42 50,20 Z" />
+        android:pathData="M39,29 h22 a3,3 0 0,1 3,3 v42 a9,9 0 0,1 -9,9 h-13 a9,9 0 0,1 -9,-9 v-42 a3,3 0 0,1 3,-3 z" />
+    <!-- 刻度线 -->
+    <path
+        android:fillColor="#ffb3c6"
+        android:pathData="M43,40 h11 v2.4 h-11 z M43,49 h8 v2.4 h-8 z M43,58 h11 v2.4 h-11 z M43,67 h8 v2.4 h-8 z" />
 </vector>
