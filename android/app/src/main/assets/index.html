@@ -10,6 +10,21 @@
 <title>喂养记录</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
+<script>
+/* 首屏前应用主题，避免深色模式闪烁 */
+(function(){
+  try{
+    var t = localStorage.getItem('bf_theme');
+    var dark = (t==='dark') || (!t && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
+    var el = document.documentElement;
+    if(t==='dark' || t==='light') el.setAttribute('data-theme', t);
+    var meta = document.querySelector('meta[name="theme-color"]');
+    var st = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+    if(dark){ if(meta) meta.setAttribute('content','#15110f'); if(st) st.setAttribute('content','black'); }
+    else { if(meta) meta.setAttribute('content','#ff7088'); if(st) st.setAttribute('content','default'); }
+  }catch(e){}
+})();
+</script>
 <style>
   :root{
     --bg:#fff5f3; --card:#ffffff; --ink:#3a2e2e; --sub:#9a8a8a;
@@ -17,11 +32,19 @@
     --L:#5b8def; --R:#ff7eb3; --B:#9b6dd6; --BT:#3bb6a0;
     --shadow:0 8px 24px rgba(255,112,136,.12);
     --radius:22px;
+    --timer-grad:linear-gradient(160deg,var(--accent),var(--accent-d));
+  }
+  /* 手动选择深色或跟随系统时的深色配色：降低整体亮度、柔化强调色，护眼 */
+  :root[data-theme="dark"]{
+    --bg:#15110f; --card:#21191c; --ink:#f2e9e7; --sub:#b3a4a4;
+    --line:#342a2c; --shadow:0 8px 24px rgba(0,0,0,.45);
+    --timer-grad:linear-gradient(160deg,#b8445c,#922f49);
   }
   @media (prefers-color-scheme: dark){
-    :root{
-      --bg:#1a1316; --card:#271d21; --ink:#f3e9e9; --sub:#a79293;
-      --line:#3a2c30; --shadow:0 8px 24px rgba(0,0,0,.35);
+    :root:not([data-theme="light"]){
+      --bg:#15110f; --card:#21191c; --ink:#f2e9e7; --sub:#b3a4a4;
+      --line:#342a2c; --shadow:0 8px 24px rgba(0,0,0,.45);
+      --timer-grad:linear-gradient(160deg,#b8445c,#922f49);
     }
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -45,7 +68,7 @@
   .iconbtn.bottle{background:linear-gradient(160deg,var(--BT),#2a9b88);color:#fff;}
   /* timer card */
   .timer{
-    background:linear-gradient(160deg,var(--accent),var(--accent-d));
+    background:var(--timer-grad);
     border-radius:var(--radius);padding:22px 20px 24px;color:#fff;
     box-shadow:var(--shadow);text-align:center;position:relative;overflow:hidden;
   }
@@ -172,6 +195,7 @@
       <div class="sub">轻触开始，记录每一次喂养</div>
     </div>
     <div class="topbtns">
+      <button class="iconbtn" id="themeBtn" title="切换到夜间模式">🌙</button>
       <button class="iconbtn bottle" id="bottleBtn">🍼 瓶喂</button>
       <button class="iconbtn" id="addBtn">＋ 补记</button>
     </div>
@@ -869,6 +893,37 @@ document.getElementById('confirmOverlay').addEventListener('click', e=>{ if(e.ta
 if('serviceWorker' in navigator){
   window.addEventListener('load', ()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
 }
+
+/* ---------- 白天 / 黑夜模式 ---------- */
+const THEME_KEY = 'bf_theme';
+function currentTheme(){
+  const t = document.documentElement.dataset.theme;
+  if(t==='dark' || t==='light') return t;
+  return (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+}
+function applyThemeMeta(theme){
+  const dark = (theme === 'dark');
+  const meta = document.querySelector('meta[name="theme-color"]');
+  const st = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+  if(meta) meta.setAttribute('content', dark ? '#15110f' : '#ff7088');
+  if(st) st.setAttribute('content', dark ? 'black' : 'default');
+}
+function updateThemeBtn(){
+  const btn = document.getElementById('themeBtn');
+  const t = currentTheme();
+  btn.textContent = (t === 'dark') ? '☀️' : '🌙';
+  btn.title = (t === 'dark') ? '切换到白天模式' : '切换到夜间模式';
+}
+document.getElementById('themeBtn').addEventListener('click', ()=>{
+  const next = (currentTheme() === 'dark') ? 'light' : 'dark';
+  document.documentElement.dataset.theme = next;
+  try{ localStorage.setItem(THEME_KEY, next); }catch(e){}
+  applyThemeMeta(next);
+  updateThemeBtn();
+  buzz(12);
+});
+// 初始化按钮状态（主题已在 <head> 内联脚本应用，避免闪烁）
+updateThemeBtn();
 
 render();
 </script>
