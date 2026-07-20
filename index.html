@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#ff7088">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="亲喂记录">
+<title>母乳亲喂记录</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  :root{
+    --bg:#fff5f3; --card:#ffffff; --ink:#3a2e2e; --sub:#9a8a8a;
+    --accent:#ff7088; --accent-d:#f2516c; --line:#f1e3df;
+    --L:#5b8def; --R:#ff7eb3; --B:#9b6dd6;
+    --shadow:0 8px 24px rgba(255,112,136,.12);
+    --radius:22px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#1a1316; --card:#271d21; --ink:#f3e9e9; --sub:#a79293;
+      --line:#3a2c30; --shadow:0 8px 24px rgba(0,0,0,.35);
+    }
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--bg); color:var(--ink);
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:520px;margin:0 auto;padding:18px 16px 40px;}
+  header{display:flex;align-items:center;justify-content:space-between;margin:6px 2px 16px;}
+  header h1{font-size:21px;margin:0;font-weight:700;letter-spacing:.5px;}
+  header .sub{font-size:12px;color:var(--sub);margin-top:2px;}
+  .iconbtn{
+    border:none;background:var(--card);color:var(--ink);
+    border-radius:14px;padding:9px 14px;font-size:14px;font-weight:600;
+    box-shadow:var(--shadow);cursor:pointer;
+  }
+  /* timer card */
+  .timer{
+    background:linear-gradient(160deg,var(--accent),var(--accent-d));
+    border-radius:var(--radius);padding:22px 20px 24px;color:#fff;
+    box-shadow:var(--shadow);text-align:center;position:relative;overflow:hidden;
+  }
+  .timer .label{font-size:13px;opacity:.9;}
+  .clock{font-size:54px;font-weight:800;letter-spacing:1px;margin:8px 0 4px;font-variant-numeric:tabular-nums;}
+  .last{font-size:13px;opacity:.92;min-height:18px;}
+  .sides{display:flex;gap:10px;justify-content:center;margin:18px 0 20px;}
+  .side{
+    flex:1;max-width:130px;border:2px solid rgba(255,255,255,.55);
+    background:rgba(255,255,255,.12);color:#fff;border-radius:16px;
+    padding:12px 0;font-size:15px;font-weight:700;cursor:pointer;
+    transition:.15s;user-select:none;
+  }
+  .side small{display:block;font-size:11px;font-weight:500;opacity:.85;margin-top:2px;}
+  .side.on{background:#fff;color:var(--accent-d);border-color:#fff;}
+  .timerbtns{margin-top:4px;}
+  .mainbtn{
+    width:100%;border:none;border-radius:18px;padding:17px 0;font-size:18px;
+    font-weight:800;cursor:pointer;background:#fff;color:var(--accent-d);
+    box-shadow:0 6px 16px rgba(0,0,0,.12);transition:.12s;
+  }
+  .mainbtn:active{transform:scale(.98);}
+  .mainbtn.stop{background:rgba(0,0,0,.18);color:#fff;}
+  .btnrow{display:flex;gap:12px;}
+  .subbtn{
+    flex:1;border:2px solid rgba(255,255,255,.7);background:rgba(255,255,255,.14);
+    color:#fff;border-radius:18px;padding:15px 0;font-size:17px;font-weight:800;cursor:pointer;transition:.12s;
+  }
+  .subbtn:active{transform:scale(.98);}
+  /* stats */
+  .stats{display:flex;gap:12px;margin:18px 0;}
+  .stat{flex:1;background:var(--card);border-radius:18px;padding:14px 12px;text-align:center;box-shadow:var(--shadow);}
+  .stat .n{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;}
+  .stat .t{font-size:12px;color:var(--sub);margin-top:3px;}
+  .stat .d{font-size:12px;color:var(--accent);margin-top:4px;font-weight:600;}
+  /* history */
+  .hist h2{font-size:16px;margin:22px 4px 8px;display:flex;justify-content:space-between;align-items:center;}
+  .hist h2 .cnt{font-size:13px;color:var(--sub);font-weight:500;}
+  .daynav{display:flex;align-items:center;justify-content:center;gap:14px;margin:0 4px 12px;}
+  .daynav button{border:none;background:var(--card);color:var(--ink);border-radius:12px;
+    width:42px;height:38px;font-size:20px;font-weight:700;box-shadow:var(--shadow);cursor:pointer;}
+  .daynav button:disabled{opacity:.35;cursor:default;}
+  .daynav .dl{font-size:15px;font-weight:700;min-width:120px;text-align:center;}
+  .item{
+    background:var(--card);border-radius:16px;padding:13px 14px;margin-bottom:10px;
+    display:flex;align-items:center;gap:12px;box-shadow:var(--shadow);cursor:pointer;
+  }
+  .badge{
+    width:40px;height:40px;border-radius:12px;flex:none;display:flex;
+    align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:15px;
+  }
+  .badge.L{background:var(--L);} .badge.R{background:var(--R);} .badge.B{background:var(--B);}
+  .item .info{flex:1;min-width:0;}
+  .item .time{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;}
+  .item .meta{font-size:12px;color:var(--sub);margin-top:2px;}
+  .item .dur{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .del{
+    border:none;background:transparent;color:var(--sub);font-size:22px;line-height:1;
+    padding:6px 8px;cursor:pointer;border-radius:10px;flex:none;
+  }
+  .del:active{background:var(--line);}
+  .empty{text-align:center;color:var(--sub);padding:40px 0;font-size:14px;}
+  /* footer */
+  .foot{display:flex;gap:12px;margin-top:26px;justify-content:center;}
+  .foot button{
+    border:none;background:transparent;color:var(--sub);font-size:13px;
+    padding:8px 12px;cursor:pointer;text-decoration:underline;
+  }
+  /* modal */
+  .overlay{
+    position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;
+    align-items:center;justify-content:center;padding:20px;z-index:50;
+  }
+  .overlay.show{display:flex;}
+  .modal{background:var(--card);border-radius:20px;padding:22px;width:100%;max-width:380px;box-shadow:var(--shadow);}
+  .modal h3{margin:0 0 14px;font-size:18px;}
+  .modal p{margin:0 0 16px;font-size:14px;color:var(--sub);line-height:1.5;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:13px;color:var(--sub);margin-bottom:6px;}
+  .field input,.field select{
+    width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;
+    font-size:15px;background:var(--bg);color:var(--ink);
+    font-family:inherit;
+  }
+  .seg{display:flex;gap:8px;}
+  .seg button{flex:1;padding:11px 0;border:1px solid var(--line);background:var(--bg);
+    border-radius:12px;font-size:15px;font-weight:700;color:var(--ink);cursor:pointer;}
+  .seg button.on{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .mrow{display:flex;gap:10px;}
+  .mrow .field{flex:1;}
+  .detail-row{display:flex;justify-content:space-between;padding:9px 2px;border-bottom:1px solid var(--line);font-size:15px;}
+  .detail-row:last-child{border-bottom:none;}
+  .detail-row .k{color:var(--sub);}
+  .detail-row .v{font-weight:700;font-variant-numeric:tabular-nums;}
+  .modal .acts{display:flex;gap:10px;margin-top:14px;}
+  .modal .acts button{flex:1;padding:13px 0;border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;}
+  .btn-ok{background:var(--accent);color:#fff;}
+  .btn-cancel{background:var(--line);color:var(--ink);}
+  /* toast */
+  #toast{
+    position:fixed;left:50%;bottom:40px;transform:translateX(-50%) translateY(20px);
+    background:rgba(40,30,30,.92);color:#fff;padding:12px 20px;border-radius:14px;
+    font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:99;max-width:80%;text-align:center;
+  }
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>母乳亲喂记录</h1>
+      <div class="sub">轻触开始，记录每一次喂养</div>
+    </div>
+    <button class="iconbtn" id="addBtn">＋ 补记</button>
+  </header>
+
+  <section class="timer">
+    <div class="label" id="timerLabel">准备开始</div>
+    <div class="clock" id="clock">00:00:00</div>
+    <div class="last" id="lastLine"></div>
+    <div class="sides" id="sides">
+      <div class="side" data-side="L">左乳<small>Left</small></div>
+      <div class="side" data-side="R">右乳<small>Right</small></div>
+      <div class="side" data-side="B">双侧<small>Both</small></div>
+    </div>
+    <div class="timerbtns">
+      <button class="mainbtn" id="mainBtn">开始亲喂</button>
+      <div class="btnrow" id="activeBtns" style="display:none">
+        <button class="subbtn" id="pauseBtn">暂停</button>
+        <button class="mainbtn stop" id="endBtn">结束亲喂</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="stats">
+    <div class="stat"><div class="n" id="stTodayN">0</div><div class="t">今日次数</div><div class="d" id="stTodayD">0分</div></div>
+    <div class="stat"><div class="n" id="stYesN">0</div><div class="t">昨日次数</div><div class="d" id="stYesD">0分</div></div>
+    <div class="stat"><div class="n" id="stAllN">0</div><div class="t">总计次数</div><div class="d" id="stAllD">0分</div></div>
+  </section>
+
+  <section class="hist">
+    <h2>喂养记录 <span class="cnt" id="histCnt"></span></h2>
+    <div class="daynav">
+      <button id="prevDay" aria-label="前一天">‹</button>
+      <span class="dl" id="dayLabel">今天</span>
+      <button id="nextDay" aria-label="后一天">›</button>
+    </div>
+    <div id="histList"></div>
+  </section>
+
+  <div class="foot">
+    <button id="exportBtn">导出备份</button>
+    <button id="clearBtn">清空数据</button>
+  </div>
+</div>
+
+<!-- 补记弹窗 -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h3>补记一次喂养</h3>
+    <div class="field">
+      <label>日期</label>
+      <input type="date" id="mDate">
+    </div>
+    <div class="mrow">
+      <div class="field">
+        <label>开始时间</label>
+        <input type="time" id="mTime" step="60">
+      </div>
+      <div class="field">
+        <label>时长（分钟）</label>
+        <input type="number" id="mDur" min="1" max="600" value="15" inputmode="numeric">
+      </div>
+    </div>
+    <div class="field">
+      <label>乳房</label>
+      <div class="seg" id="mSeg">
+        <button data-side="L">左乳</button>
+        <button data-side="R">右乳</button>
+        <button data-side="B">双侧</button>
+      </div>
+    </div>
+    <div class="acts">
+      <button class="btn-cancel" id="mCancel">取消</button>
+      <button class="btn-ok" id="mSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 详情弹窗 -->
+<div class="overlay" id="detailOverlay">
+  <div class="modal">
+    <h3>喂养详情</h3>
+    <div id="detailBody"></div>
+    <div class="acts">
+      <button class="btn-cancel" id="dClose">关闭</button>
+      <button class="btn-ok" id="dEdit">修改</button>
+    </div>
+  </div>
+</div>
+
+<!-- 修改弹窗 -->
+<div class="overlay" id="editOverlay">
+  <div class="modal">
+    <h3>修改记录</h3>
+    <div class="field">
+      <label>日期</label>
+      <input type="date" id="eDate">
+    </div>
+    <div class="mrow">
+      <div class="field">
+        <label>开始时间</label>
+        <input type="time" id="eTime" step="60">
+      </div>
+      <div class="field">
+        <label>时长（分钟）</label>
+        <input type="number" id="eDur" min="1" max="600" value="15" inputmode="numeric">
+      </div>
+    </div>
+    <div class="field">
+      <label>乳房</label>
+      <div class="seg" id="eSeg">
+        <button data-side="L">左乳</button>
+        <button data-side="R">右乳</button>
+        <button data-side="B">双侧</button>
+      </div>
+    </div>
+    <div class="acts">
+      <button class="btn-cancel" id="eCancel">取消</button>
+      <button class="btn-ok" id="eSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 确认弹窗（替代被 WebView 压制的 confirm） -->
+<div class="overlay" id="confirmOverlay">
+  <div class="modal">
+    <h3 id="cfTitle">确认</h3>
+    <p id="cfMsg"></p>
+    <div class="acts">
+      <button class="btn-cancel" id="cfCancel">取消</button>
+      <button class="btn-ok" id="cfOk">确定</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const KEY = 'bf_sessions_v1';
+const SIDE_NAME = {L:'左乳', R:'右乳', B:'双侧'};
+let sessions = load();
+let selectedSide = 'L';
+let tick = null;
+let viewDate = startOfDay(Date.now());   // 历史列表当前查看的日期
+let editId = null;                       // 正在修改的记录 id
+
+function load(){ try{ return JSON.parse(localStorage.getItem(KEY)) || []; }catch(e){ return []; } }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(sessions)); }catch(e){ console.warn('save failed', e); } }
+function getActive(){ return sessions.find(s => s.end === null) || null; }
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function buzz(ms){ try{ navigator.vibrate && navigator.vibrate(ms); }catch(e){} }
+
+function startOfDay(ts){ const d = new Date(ts); d.setHours(0,0,0,0); return d.getTime(); }
+function isSameDay(a,b){ return startOfDay(a) === startOfDay(b); }
+
+function pad(n){ return n<10 ? '0'+n : ''+n; }
+function fmtHMS(ms){
+  let s = Math.max(0, Math.floor(ms/1000));
+  const h = Math.floor(s/3600); s -= h*3600;
+  const m = Math.floor(s/60); s -= m*60;
+  return pad(h)+':'+pad(m)+':'+pad(s);
+}
+function fmtDur(ms){
+  if(ms < 60000) return '<1分';
+  const m = Math.round(ms/60000);
+  if(m < 60) return m + '分';
+  const h = Math.floor(m/60), r = m%60;
+  return r ? (h+'小时'+r+'分') : (h+'小时');
+}
+function fmtClock(ts){
+  const d = new Date(ts);
+  return pad(d.getHours())+':'+pad(d.getMinutes());
+}
+function fmtDate(ts){
+  const d = new Date(ts);
+  return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+}
+function fmtDateCn(ts){
+  const d = new Date(ts);
+  const wk = ['日','一','二','三','四','五','六'][d.getDay()];
+  return (d.getMonth()+1)+'月'+d.getDate()+'日 周'+wk;
+}
+function fmtRelative(ts){
+  const diff = Date.now() - ts;
+  if(diff < 60000) return '刚刚';
+  if(diff < 3600000) return Math.floor(diff/60000)+'分钟前';
+  if(diff < 86400000) return Math.floor(diff/3600000)+'小时前';
+  return Math.floor(diff/86400000)+'天前';
+}
+// 已结束记录的净时长（扣除暂停）
+function netDuration(s){
+  const end = s.end != null ? s.end : Date.now();
+  let paused = s.pausedTotal || 0;
+  if(s.end == null && s.pausedAt) paused += Date.now() - s.pausedAt;
+  return Math.max(0, end - s.start - paused);
+}
+// 实时计时（用于进行中/暂停态的时钟）
+function liveElapsed(s){
+  let paused = s.pausedTotal || 0;
+  if(s.pausedAt) paused += Date.now() - s.pausedAt;
+  return Math.max(0, Date.now() - s.start - paused);
+}
+
+/* ---------- 轻提示 / 确认弹窗 ---------- */
+let toastTimer = null;
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2200);
+}
+function confirmDialog(msg, onOk, title){
+  document.getElementById('cfMsg').textContent = msg;
+  document.getElementById('cfTitle').textContent = title || '确认';
+  const ov = document.getElementById('confirmOverlay');
+  ov.classList.add('show');
+  const ok = document.getElementById('cfOk');
+  const cancel = document.getElementById('cfCancel');
+  ok.onclick = ()=>{ ov.classList.remove('show'); onOk(); };
+  cancel.onclick = ()=>{ ov.classList.remove('show'); };
+}
+
+/* ---------- 渲染 ---------- */
+function render(){
+  renderTimer();
+  renderStats();
+  renderHistory();
+}
+function renderTimer(){
+  const active = getActive();
+  const label = document.getElementById('timerLabel');
+  const clock = document.getElementById('clock');
+  const last = document.getElementById('lastLine');
+  const mainBtn = document.getElementById('mainBtn');
+  const activeBtns = document.getElementById('activeBtns');
+  const pauseBtn = document.getElementById('pauseBtn');
+  const sides = document.getElementById('sides').children;
+
+  if(!active){
+    if(tick){ clearInterval(tick); tick = null; }
+    label.textContent = '准备开始';
+    clock.textContent = '00:00:00';
+    mainBtn.style.display = '';
+    activeBtns.style.display = 'none';
+    for(const el of sides){
+      el.classList.toggle('on', el.dataset.side === selectedSide);
+      el.style.pointerEvents = ''; el.style.opacity = '';
+    }
+    const done = sessions.filter(s=>s.end!==null);
+    if(done.length){
+      const lastS = done[done.length-1];
+      last.textContent = '上次：'+fmtRelative(lastS.end)+' · '+fmtDur(netDuration(lastS));
+    } else { last.textContent = '还没有记录，开始第一次吧'; }
+    return;
+  }
+
+  // 有进行中的记录
+  mainBtn.style.display = 'none';
+  activeBtns.style.display = 'flex';
+  for(const el of sides){ el.classList.remove('on'); el.style.pointerEvents='none'; el.style.opacity='.5'; }
+
+  if(active.pausedAt){
+    label.textContent = '已暂停 · ' + SIDE_NAME[active.side];
+    clock.textContent = fmtHMS(liveElapsed(active));
+    pauseBtn.textContent = '继续';
+    last.textContent = '暂停于 ' + fmtClock(active.pausedAt);
+    if(tick){ clearInterval(tick); tick = null; }
+  } else {
+    label.textContent = '亲喂中 · ' + SIDE_NAME[active.side];
+    clock.textContent = fmtHMS(liveElapsed(active));
+    pauseBtn.textContent = '暂停';
+    last.textContent = '开始于 ' + fmtClock(active.start);
+    if(!tick) tick = setInterval(()=>{ clock.textContent = fmtHMS(liveElapsed(active)); }, 1000);
+  }
+}
+function renderStats(){
+  const done = sessions.filter(s=>s.end!==null);
+  const today = done.filter(s=>isSameDay(s.end,Date.now()));
+  const yes = done.filter(s=>isSameDay(s.end,Date.now()-86400000));
+  const sum = arr => arr.reduce((a,s)=>a+netDuration(s),0);
+  document.getElementById('stTodayN').textContent = today.length;
+  document.getElementById('stTodayD').textContent = fmtDur(sum(today));
+  document.getElementById('stYesN').textContent = yes.length;
+  document.getElementById('stYesD').textContent = fmtDur(sum(yes));
+  document.getElementById('stAllN').textContent = done.length;
+  document.getElementById('stAllD').textContent = fmtDur(sum(done));
+}
+function renderHistory(){
+  const list = document.getElementById('histList');
+  const today0 = startOfDay(Date.now());
+  // 日期导航标签
+  let dl;
+  if(viewDate === today0) dl = '今天';
+  else if(viewDate === today0 - 86400000) dl = '昨天';
+  else dl = fmtDateCn(viewDate);
+  document.getElementById('dayLabel').textContent = dl;
+  document.getElementById('prevDay').disabled = false;
+  document.getElementById('nextDay').disabled = (viewDate >= today0);
+
+  // 仅展示 viewDate 当天的记录
+  const daySessions = sessions
+    .filter(s => isSameDay(s.start, viewDate))
+    .sort((a,b)=> b.start - a.start);
+
+  document.getElementById('histCnt').textContent = daySessions.length ? ('共 '+daySessions.length+' 次') : '';
+  if(!daySessions.length){
+    list.innerHTML = '<div class="empty">这一天还没有记录<br>点击下方按钮开始亲喂 🤱</div>';
+    return;
+  }
+  let html = '';
+  for(const s of daySessions){
+    const active = s.end === null;
+    const sameDay = isSameDay(s.start, s.end == null ? Date.now() : s.end);
+    const timeStr = sameDay ? (fmtClock(s.start)+' – '+(active ? '进行中' : fmtClock(s.end)))
+                             : (fmtClock(s.start)+' 起');
+    const durStr = active ? fmtHMS(liveElapsed(s)) : fmtDur(netDuration(s));
+    const paused = (s.pausedTotal||0) + (s.pausedAt ? (Date.now()-s.pausedAt) : 0);
+    const meta = SIDE_NAME[s.side] + (paused>60000 ? ' · 含暂停'+fmtDur(paused) : '');
+    html += '<div class="item" data-id="'+s.id+'">'
+      + '<div class="badge '+s.side+'">'+s.side+'</div>'
+      + '<div class="info"><div class="time">'+timeStr+'</div>'
+      + '<div class="meta">'+meta+'</div></div>'
+      + '<div class="dur">'+durStr+'</div>'
+      + '<button class="del" data-id="'+s.id+'" aria-label="删除">×</button>'
+      + '</div>';
+  }
+  list.innerHTML = html;
+}
+
+/* ---------- 计时交互 ---------- */
+document.getElementById('sides').addEventListener('click', e=>{
+  const el = e.target.closest('.side'); if(!el || getActive()) return;
+  selectedSide = el.dataset.side; buzz(15); renderTimer();
+});
+document.getElementById('mainBtn').addEventListener('click', ()=>{
+  if(getActive()) return;
+  sessions.push({id:uid(), start:Date.now(), end:null, side:selectedSide, pausedTotal:0, pausedAt:null});
+  buzz(30); save(); render();
+});
+document.getElementById('pauseBtn').addEventListener('click', ()=>{
+  const active = getActive(); if(!active) return;
+  if(active.pausedAt){
+    // 继续
+    active.pausedTotal = (active.pausedTotal||0) + (Date.now() - active.pausedAt);
+    active.pausedAt = null;
+    buzz(20);
+  } else {
+    // 暂停
+    active.pausedAt = Date.now();
+    buzz(20);
+  }
+  save(); render();
+});
+document.getElementById('endBtn').addEventListener('click', ()=>{
+  const active = getActive(); if(!active) return;
+  if(active.pausedAt){
+    active.pausedTotal = (active.pausedTotal||0) + (Date.now() - active.pausedAt);
+    active.pausedAt = null;
+  }
+  active.end = Date.now();
+  buzz([20,40,20]); save(); render();
+});
+
+/* ---------- 补记弹窗 ---------- */
+let mSide = 'L';
+const overlay = document.getElementById('overlay');
+function openModal(){
+  const now = new Date();
+  document.getElementById('mDate').value = fmtDate(now.getTime());
+  document.getElementById('mTime').value = fmtClock(now.getTime());
+  mSide = 'L';
+  document.querySelectorAll('#mSeg button').forEach(b=>b.classList.toggle('on', b.dataset.side==='L'));
+  overlay.classList.add('show');
+}
+function closeModal(){ overlay.classList.remove('show'); }
+document.getElementById('addBtn').addEventListener('click', openModal);
+document.getElementById('mCancel').addEventListener('click', closeModal);
+overlay.addEventListener('click', e=>{ if(e.target===overlay) closeModal(); });
+document.querySelectorAll('#mSeg button').forEach(b=>{
+  b.onclick = ()=>{ mSide=b.dataset.side; document.querySelectorAll('#mSeg button').forEach(x=>x.classList.toggle('on', x===b)); };
+});
+document.getElementById('mSave').addEventListener('click', ()=>{
+  const date = document.getElementById('mDate').value;
+  const time = document.getElementById('mTime').value;
+  const dur = parseInt(document.getElementById('mDur').value,10);
+  if(!date || !time || !dur || dur<1){ toast('请填写完整信息'); return; }
+  const start = new Date(date+'T'+time+':00').getTime();
+  if(isNaN(start)){ toast('时间格式有误'); return; }
+  const end = start + dur*60000;
+  if(end > Date.now()+60000){ toast('结束时间不能晚于现在'); return; }
+  sessions.push({id:uid(), start, end, side:mSide, pausedTotal:0, pausedAt:null});
+  save(); render(); closeModal();
+});
+
+/* ---------- 详情 / 修改 ---------- */
+const detailOverlay = document.getElementById('detailOverlay');
+const editOverlay = document.getElementById('editOverlay');
+function openDetail(id){
+  const s = sessions.find(x=>x.id===id); if(!s) return;
+  const active = s.end === null;
+  const paused = (s.pausedTotal||0) + (s.pausedAt ? (Date.now()-s.pausedAt) : 0);
+  let rows = '';
+  rows += '<div class="detail-row"><span class="k">日期</span><span class="v">'+fmtDateCn(s.start)+'</span></div>';
+  rows += '<div class="detail-row"><span class="k">开始</span><span class="v">'+fmtClock(s.start)+'</span></div>';
+  if(active){
+    rows += '<div class="detail-row"><span class="k">状态</span><span class="v">进行中</span></div>';
+    rows += '<div class="detail-row"><span class="k">已用</span><span class="v">'+fmtHMS(liveElapsed(s))+'</span></div>';
+  } else {
+    rows += '<div class="detail-row"><span class="k">结束</span><span class="v">'+fmtClock(s.end)+'</span></div>';
+    rows += '<div class="detail-row"><span class="k">时长</span><span class="v">'+fmtDur(netDuration(s))+'</span></div>';
+  }
+  if(paused>60000) rows += '<div class="detail-row"><span class="k">暂停</span><span class="v">'+fmtDur(paused)+'</span></div>';
+  rows += '<div class="detail-row"><span class="k">乳房</span><span class="v">'+SIDE_NAME[s.side]+'</span></div>';
+  document.getElementById('detailBody').innerHTML = rows;
+  document.getElementById('dEdit').style.display = active ? 'none' : '';
+  detailOverlay.classList.add('show');
+  document.getElementById('dEdit').onclick = ()=>{ detailOverlay.classList.remove('show'); openEdit(id); };
+}
+document.getElementById('dClose').addEventListener('click', ()=>detailOverlay.classList.remove('show'));
+detailOverlay.addEventListener('click', e=>{ if(e.target===detailOverlay) detailOverlay.classList.remove('show'); });
+
+function openEdit(id){
+  const s = sessions.find(x=>x.id===id); if(!s || s.end===null) return;
+  editId = id;
+  document.getElementById('eDate').value = fmtDate(s.start);
+  document.getElementById('eTime').value = fmtClock(s.start);
+  document.getElementById('eDur').value = Math.max(1, Math.round(netDuration(s)/60000));
+  document.querySelectorAll('#eSeg button').forEach(b=>b.classList.toggle('on', b.dataset.side===s.side));
+  editOverlay.classList.add('show');
+}
+document.getElementById('eCancel').addEventListener('click', ()=>editOverlay.classList.remove('show'));
+editOverlay.addEventListener('click', e=>{ if(e.target===editOverlay) editOverlay.classList.remove('show'); });
+document.querySelectorAll('#eSeg button').forEach(b=>{
+  b.onclick = ()=>{ const seg=document.getElementById('eSeg'); seg.dataset.side=b.dataset.side;
+    document.querySelectorAll('#eSeg button').forEach(x=>x.classList.toggle('on', x===b)); };
+});
+document.getElementById('eSave').addEventListener('click', ()=>{
+  const s = sessions.find(x=>x.id===editId); if(!s) return;
+  const date = document.getElementById('eDate').value;
+  const time = document.getElementById('eTime').value;
+  const dur = parseInt(document.getElementById('eDur').value,10);
+  let side = document.getElementById('eSeg').dataset.side || s.side;
+  if(!date || !time || !dur || dur<1){ toast('请填写完整信息'); return; }
+  const start = new Date(date+'T'+time+':00').getTime();
+  if(isNaN(start)){ toast('时间格式有误'); return; }
+  const end = start + dur*60000;
+  if(end > Date.now()+60000){ toast('结束时间不能晚于现在'); return; }
+  s.start = start; s.end = end; s.side = side; s.pausedTotal = 0; s.pausedAt = null;
+  save(); render(); editOverlay.classList.remove('show');
+});
+
+/* 历史列表点击：删除（×）或打开详情 */
+document.getElementById('histList').addEventListener('click', e=>{
+  const del = e.target.closest('.del');
+  if(del){
+    e.stopPropagation();
+    const id = del.dataset.id;
+    confirmDialog('删除这条记录？删除后不可恢复。', ()=>{
+      sessions = sessions.filter(x=>x.id!==id);
+      save(); render();
+    }, '删除记录');
+    return;
+  }
+  const item = e.target.closest('.item');
+  if(item) openDetail(item.dataset.id);
+});
+
+/* 日期导航 */
+document.getElementById('prevDay').addEventListener('click', ()=>{
+  viewDate -= 86400000; render();
+});
+document.getElementById('nextDay').addEventListener('click', ()=>{
+  const today0 = startOfDay(Date.now());
+  if(viewDate < today0){ viewDate += 86400000; render(); }
+});
+
+/* ---------- 导出 / 清空 ---------- */
+document.getElementById('exportBtn').addEventListener('click', ()=>{
+  const json = JSON.stringify(sessions, null, 2);
+  if(window.AndroidBridge && window.AndroidBridge.exportData){
+    // 在 APK（WebView）内：交给原生把文件写入下载目录
+    window.AndroidBridge.exportData(json);
+  } else {
+    // 在普通浏览器内：触发文件下载
+    try{
+      const blob = new Blob([json], {type:'application/json'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = '母乳亲喂记录_'+fmtDate(Date.now())+'.json';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }catch(err){
+      toast('导出失败，请尝试复制：'+err.message);
+    }
+  }
+});
+document.getElementById('clearBtn').addEventListener('click', ()=>{
+  confirmDialog('确定清空全部记录？此操作不可恢复。', ()=>{
+    sessions = []; selectedSide='L'; viewDate = startOfDay(Date.now()); save(); render();
+    toast('已清空全部记录');
+  }, '清空数据');
+});
+
+/* ---------- 确认弹窗通用按钮 ---------- */
+document.getElementById('cfCancel').addEventListener('click', ()=>document.getElementById('confirmOverlay').classList.remove('show'));
+document.getElementById('confirmOverlay').addEventListener('click', e=>{ if(e.target===e.currentTarget) e.currentTarget.classList.remove('show'); });
+
+/* PWA */
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+}
+
+render();
+</script>
+</body>
+</html>
