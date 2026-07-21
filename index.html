@@ -11,27 +11,11 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
 <script>
-/* 首屏前应用主题，避免深色模式闪烁 */
+/* 仅明亮模式：确保安卓原生状态栏/导航栏为浅色背景 + 深色图标 */
 (function(){
   try{
-    var t = localStorage.getItem('bf_theme');
-    var isNight = (function(){ var h=new Date().getHours(); return (h<7||h>=19); })();
-    var dark = (t==='dark') || (!t && isNight);
-    var el = document.documentElement;
-    if(t==='dark' || t==='light') el.setAttribute('data-theme', t);
-    else if(dark) el.setAttribute('data-theme','dark');
-    var meta = document.querySelector('meta[name="theme-color"]');
-    var st = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
-    if(dark){ if(meta) meta.setAttribute('content','#1f1a17'); if(st) st.setAttribute('content','black'); }
-    else { if(meta) meta.setAttribute('content','#fff5f3'); if(st) st.setAttribute('content','default'); }
-    /* 同步安卓原生状态栏/导航栏颜色：明亮模式=背景色+深色图标；深色模式=暖黑底+浅色图标 */
-    try{
-      var ab = window.AndroidBridge;
-      if(ab && typeof ab.setBarColors === 'function'){
-        if(dark) ab.setBarColors('#1f1a17','#1f1a17', false);
-        else ab.setBarColors('#fff5f3','#fff5f3', true);
-      }
-    }catch(e2){}
+    var ab = window.AndroidBridge;
+    if(ab && typeof ab.setBarColors === 'function') ab.setBarColors('#fff5f3','#fff5f3', true);
   }catch(e){}
 })();
 </script>
@@ -46,37 +30,6 @@
     --timer-grad:linear-gradient(160deg,var(--accent),var(--accent-d));
     --timer-ink:#fff; --timer-border:transparent;
   }
-  /* 手动选择深色或跟随系统时的深色配色：降低整体亮度、柔化强调色，护眼 */
-  :root[data-theme="dark"]{
-    --bg:#1f1a17; --card:#2a231f; --ink:#ece3da; --sub:#a3948b;
-    --line:#3b322c; --shadow:0 8px 24px rgba(0,0,0,.5);
-    --accent:#e0a96d; --accent-d:#cf8f50;
-    --L:#88afc9; --R:#d99c7c; --B:#b48ac4; --BT:#7fb89a;
-    --accent-soft:rgba(224,169,109,.12);
-    --timer-grad:linear-gradient(160deg,#2a201b,#1f1a17); --timer-ink:#ece3da; --timer-border:var(--line);
-  }
-  @media (prefers-color-scheme: dark){
-    :root:not([data-theme="light"]){
-      --bg:#1f1a17; --card:#2a231f; --ink:#ece3da; --sub:#a3948b;
-      --line:#3b322c; --shadow:0 8px 24px rgba(0,0,0,.5);
-      --accent:#e0a96d; --accent-d:#cf8f50;
-      --L:#88afc9; --R:#d99c7c; --B:#b48ac4; --BT:#7fb89a;
-      --accent-soft:rgba(224,169,109,.12);
-      --timer-grad:linear-gradient(160deg,#2a201b,#1f1a17); --timer-ink:#ece3da; --timer-border:var(--line);
-    }
-  }
-  /* 深色模式：温馨暖色调（暖棕底 + 奶油字 + 暖琥珀强调），弱光下柔和护眼 */
-  :root[data-theme="dark"] .badge{color:#fbf6f0;}
-  :root[data-theme="dark"] .side{background:rgba(236,227,218,.08);color:#ece3da;border-color:rgba(236,227,218,.25);}
-  :root[data-theme="dark"] .side.on{background:var(--accent);color:#241c16;border-color:var(--accent);}
-  :root[data-theme="dark"] .mainbtn{background:var(--accent);color:#241c16;border:1px solid var(--accent);box-shadow:none;}
-  :root[data-theme="dark"] .subbtn{background:rgba(236,227,218,.10);color:#ece3da;border-color:rgba(236,227,218,.3);}
-  :root[data-theme="dark"] .subbtn.stop{background:rgba(224,169,109,.16);color:#ece3da;border-color:var(--accent);}
-  :root[data-theme="dark"] .iconbtn.bottle{background:rgba(236,227,218,.08);color:#ece3da;border:1px solid var(--line);}
-  :root[data-theme="dark"] .seg button.on{background:var(--accent);color:#241c16;border-color:var(--accent);}
-  :root[data-theme="dark"] .btn-ok{background:var(--accent);color:#241c16;}
-  :root[data-theme="dark"] .btn-danger{background:#b9584f;color:#fbf6f0;}
-  :root[data-theme="dark"] .witem.on{color:var(--accent);}
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{margin:0;padding:0;}
   body{
@@ -281,6 +234,14 @@
     border-radius:12px;padding:8px 14px;font-size:13px;cursor:pointer;}
   .avatar-upload:hover{color:var(--accent);border-color:var(--accent);}
 
+  /* 喂养页：时间卡上方的宝宝信息卡（可点击编辑） */
+  #feedBabyCard{cursor:pointer;}
+  #feedBabyCard:active{opacity:.7;}
+  /* 成长页：添加记录卡片更紧凑 */
+  .card.compact{padding:12px 14px;margin:12px 0;}
+  .card.compact h2{margin:0 0 8px;font-size:15px;}
+  .card.compact .field{margin-bottom:10px;}
+
 </style>
 </head>
 <body>
@@ -292,11 +253,23 @@
       <div class="sub">轻触开始，记录每一次喂养</div>
     </div>
     <div class="topbtns">
-      <button class="iconbtn" id="themeBtn" title="切换到夜间模式">🌙</button>
       <button class="iconbtn bottle" id="bottleBtn">🍼 瓶喂</button>
       <button class="iconbtn" id="addBtn">＋ 补记</button>
     </div>
   </header>
+
+  <section class="card" id="feedBabyCard">
+    <div class="baby-head">
+      <div class="baby-avatar" id="feedBabyAvatarWrap" title="点击编辑宝宝信息">
+        <img id="feedBabyAvatar" alt="宝宝头像" style="display:none">
+        <span class="ph" id="feedBabyAvatarPh">👶</span>
+      </div>
+      <div class="baby-main">
+        <div class="baby-name" id="feedBabyName">宝宝</div>
+        <div class="baby-meta" id="feedBabyMeta">未填写信息，点击编辑</div>
+      </div>
+    </div>
+  </section>
 
   <section class="timer">
     <div class="label" id="timerLabel">准备开始</div>
@@ -317,14 +290,9 @@
   </section>
 
   <section class="stats">
-    <div class="stat"><div class="n" id="stTodayN">0</div><div class="t">今日次数</div><div class="d" id="stTodayD">0分</div></div>
-    <div class="stat"><div class="n" id="stYesN">0</div><div class="t">昨日次数</div><div class="d" id="stYesD">0分</div></div>
-    <div class="stat"><div class="n" id="stAllN">0</div><div class="t">总计次数</div><div class="d" id="stAllD">0分</div></div>
-  </section>
-
-  <section class="growjump" id="growJumpCard">
-    <div class="gj-left"><span class="gj-ic">📈</span><div><div class="gj-t">宝宝成长</div><div class="gj-s">记录身高体重，查看成长曲线</div></div></div>
-    <button class="iconbtn" id="gotoGrow">查看 →</button>
+    <div class="stat"><div class="n" id="stTodayN">0</div><div class="t">今日次数</div></div>
+    <div class="stat"><div class="n" id="stYesN">0</div><div class="t">昨日次数</div></div>
+    <div class="stat"><div class="n" id="stAllN">0</div><div class="t">总计次数</div></div>
   </section>
 
   <section class="hist">
@@ -346,9 +314,6 @@
         <h1>宝宝成长</h1>
         <div class="sub">记录身高体重，见证每一步</div>
       </div>
-      <div class="topbtns">
-        <button class="iconbtn" id="themeBtn2" title="切换到夜间模式">🌙</button>
-      </div>
     </header>
 
     <section class="card">
@@ -365,7 +330,7 @@
       </div>
     </section>
 
-    <section class="card">
+    <section class="card compact">
       <h2>添加记录</h2>
       <div class="mrow">
         <div class="field" style="flex:1"><label>日期</label><input type="date" id="gDate"></div>
@@ -798,14 +763,9 @@ function renderStats(){
   const done = sessions.filter(s=>s.end!==null);
   const today = done.filter(s=>isSameDay(s.end,Date.now()));
   const yes = done.filter(s=>isSameDay(s.end,Date.now()-86400000));
-  const sum = arr => arr.reduce((a,s)=>a+netDuration(s),0);
-  const durStr = ms => { const m=Math.round(ms/60000); return m<60 ? m+'分' : Math.floor(m/60)+'小时'+ (m%60? (m%60)+'分':''); };
   document.getElementById('stTodayN').textContent = today.length;
-  document.getElementById('stTodayD').textContent = durStr(sum(today));
   document.getElementById('stYesN').textContent = yes.length;
-  document.getElementById('stYesD').textContent = durStr(sum(yes));
   document.getElementById('stAllN').textContent = done.length;
-  document.getElementById('stAllD').textContent = durStr(sum(done));
 }
 function renderHistory(){
   const list = document.getElementById('histList');
@@ -1099,60 +1059,14 @@ if('serviceWorker' in navigator){
   window.addEventListener('load', ()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
 }
 
-/* ---------- 白天 / 黑夜模式 ---------- */
-const THEME_KEY = 'bf_theme';
-function isNight(){
-  const h = new Date().getHours();
-  return (h < 7 || h >= 19);
-}
-function currentTheme(){
-  const t = document.documentElement.dataset.theme;
-  if(t==='dark' || t==='light') return t;
-  return isNight() ? 'dark' : 'light';
-}
-function applyThemeMeta(theme){
-  const dark = (theme === 'dark');
-  const meta = document.querySelector('meta[name="theme-color"]');
-  const st = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
-  if(meta) meta.setAttribute('content', dark ? '#1f1a17' : '#fff5f3');
-  if(st) st.setAttribute('content', dark ? 'black' : 'default');
-}
-/* 通知安卓原生状态栏/导航栏跟随主题（深色=暖黑底+浅色图标；浅色=粉底+深色图标） */
-function syncNativeBars(){
+/* ---------- 仅明亮模式（无主题切换） ---------- */
+/* 进入页面时确保安卓原生状态栏/导航栏为浅色背景 + 深色图标 */
+(function(){
   try{
     const b = window.AndroidBridge;
-    if(!b || typeof b.setBarColors !== 'function') return;
-    const dark = (currentTheme() === 'dark');
-    if(dark) b.setBarColors('#1f1a17','#1f1a17', false);
-    else b.setBarColors('#fff5f3','#fff5f3', true);
+    if(b && typeof b.setBarColors === 'function') b.setBarColors('#fff5f3','#fff5f3', true);
   }catch(e){}
-}
-function updateThemeBtn(){
-  const t = currentTheme();
-  const icon = (t === 'dark') ? '☀️' : '🌙';
-  const title = (t === 'dark') ? '切换到白天模式' : '切换到夜间模式';
-  const b1 = document.getElementById('themeBtn');
-  const b2 = document.getElementById('themeBtn2');
-  if(b1){ b1.textContent = icon; b1.title = title; }
-  if(b2){ b2.textContent = icon; b2.title = title; }
-}
-function toggleTheme(){
-  const next = (currentTheme() === 'dark') ? 'light' : 'dark';
-  document.documentElement.dataset.theme = next;
-  try{ localStorage.setItem(THEME_KEY, next); }catch(e){}
-  applyThemeMeta(next);
-  updateThemeBtn();
-  syncNativeBars();
-  buzz(12);
-  // 主题色变了，重绘成长曲线（颜色取自 CSS 变量）
-  if(document.getElementById('pageGrow').style.display !== 'none') drawGrowthChart();
-}
-document.getElementById('themeBtn').addEventListener('click', toggleTheme);
-const _tb2 = document.getElementById('themeBtn2');
-if(_tb2) _tb2.addEventListener('click', toggleTheme);
-// 初始化按钮状态（主题已在 <head> 内联脚本应用，避免闪烁）
-updateThemeBtn();
-syncNativeBars();
+})();
 
 /* ---------- 页面切换（喂养 / 成长） ---------- */
 function showPage(which){
@@ -1173,7 +1087,6 @@ function showPage(which){
 }
 document.getElementById('tabFeed').addEventListener('click', ()=>showPage('feed'));
 document.getElementById('tabGrow').addEventListener('click', ()=>showPage('grow'));
-document.getElementById('gotoGrow').addEventListener('click', ()=>showPage('grow'));
 
 /* ---------- 宝宝成长记录 ---------- */
 const KEY_INFO = 'bf_baby_info_v1';
@@ -1196,11 +1109,12 @@ function ageText(birthTs){
   return months + ' 个月' + (rem ? (' ' + rem + ' 天') : '');
 }
 /* 宝宝信息：展示卡渲染（头像 / 姓名 / 月龄） */
-function renderBabyInfo(){
-  const img = document.getElementById('babyAvatar');
-  const ph = document.getElementById('babyAvatarPh');
-  const nameEl = document.getElementById('babyDispName');
-  const metaEl = document.getElementById('babyDispMeta');
+function applyBabyToCard(ids){
+  const img = document.getElementById(ids.img);
+  const ph = document.getElementById(ids.ph);
+  const nameEl = document.getElementById(ids.name);
+  const metaEl = document.getElementById(ids.meta);
+  if(!img) return;
   if(babyInfo && babyInfo.avatar){
     img.src = babyInfo.avatar; img.style.display = ''; ph.style.display = 'none';
   } else {
@@ -1216,8 +1130,12 @@ function renderBabyInfo(){
     }
     metaEl.textContent = s || '未填写出生信息';
   } else {
-    metaEl.textContent = '未填写信息，点击右侧「编辑」';
+    metaEl.textContent = '未填写信息，点击编辑';
   }
+}
+function renderBabyInfo(){
+  applyBabyToCard({img:'babyAvatar', ph:'babyAvatarPh', name:'babyDispName', meta:'babyDispMeta'});
+  applyBabyToCard({img:'feedBabyAvatar', ph:'feedBabyAvatarPh', name:'feedBabyName', meta:'feedBabyMeta'});
 }
 
 /* 打开宝宝信息编辑弹窗（含头像上传） */
@@ -1238,6 +1156,7 @@ function openBabyEdit(){
 }
 document.getElementById('editBabyBtn').addEventListener('click', openBabyEdit);
 document.getElementById('babyAvatarWrap').addEventListener('click', openBabyEdit);
+document.getElementById('feedBabyCard').addEventListener('click', openBabyEdit);
 document.getElementById('babyAvEditWrap').addEventListener('click', ()=>document.getElementById('babyAvatarInput').click());
 document.getElementById('babyAvatarInput').addEventListener('change', e=>{
   const file = e.target.files && e.target.files[0];
