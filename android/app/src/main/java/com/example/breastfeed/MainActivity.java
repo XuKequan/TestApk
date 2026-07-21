@@ -53,7 +53,7 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void exportData(String json) {
             try {
-                String name = "母乳亲喂记录_"
+                String name = "母乳喂养记录_"
                         + new SimpleDateFormat("yyyy-MM-dd", Locale.CHINA).format(new Date())
                         + ".json";
                 File dir;
