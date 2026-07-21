@@ -1,7 +1,7 @@
 {
   "name": "喂养记录",
   "short_name": "喂养记录",
-  "description": "记录母乳亲喂与瓶喂的时间、时长与左右",
+  "description": "记录母乳喂养与瓶喂的时间、时长与左右",
   "lang": "zh-CN",
   "start_url": "./index.html",
   "scope": "./",
