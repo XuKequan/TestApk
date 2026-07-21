@@ -234,9 +234,13 @@
     border-radius:12px;padding:8px 14px;font-size:13px;cursor:pointer;}
   .avatar-upload:hover{color:var(--accent);border-color:var(--accent);}
 
-  /* 喂养页：时间卡上方的宝宝信息卡（可点击编辑） */
-  #feedBabyCard{cursor:pointer;}
-  #feedBabyCard:active{opacity:.7;}
+  /* 喂养页：时间卡上方的宝宝信息（只读，单行展示） */
+  #feedBabyCard{display:flex;align-items:center;gap:10px;padding:9px 12px;margin:10px 0;}
+  #feedBabyCard .baby-head{gap:10px;padding:0;flex:1;min-width:0;}
+  #feedBabyCard .baby-avatar{width:38px;height:38px;flex:0 0 38px;font-size:20px;cursor:default;}
+  #feedBabyCard .baby-avatar .ph{font-size:20px;}
+  #feedBabyCard .baby-name{font-size:15px;font-weight:700;}
+  #feedBabyCard .baby-meta{font-size:12px;margin-top:1px;}
   /* 成长页：添加记录卡片更紧凑 */
   .card.compact{padding:12px 14px;margin:12px 0;}
   .card.compact h2{margin:0 0 8px;font-size:15px;}
@@ -258,12 +262,12 @@
     </div>
   </header>
 
-  <section class="card" id="feedBabyCard">
-    <div class="baby-head">
-      <div class="baby-avatar" id="feedBabyAvatarWrap" title="点击编辑宝宝信息">
-        <img id="feedBabyAvatar" alt="宝宝头像" style="display:none">
-        <span class="ph" id="feedBabyAvatarPh">👶</span>
-      </div>
+    <section class="card" id="feedBabyCard">
+      <div class="baby-head">
+        <div class="baby-avatar" id="feedBabyAvatarWrap">
+          <img id="feedBabyAvatar" alt="宝宝头像" style="display:none">
+          <span class="ph" id="feedBabyAvatarPh">👶</span>
+        </div>
       <div class="baby-main">
         <div class="baby-name" id="feedBabyName">宝宝</div>
         <div class="baby-meta" id="feedBabyMeta">未填写信息，点击编辑</div>
@@ -1130,7 +1134,7 @@ function applyBabyToCard(ids){
     }
     metaEl.textContent = s || '未填写出生信息';
   } else {
-    metaEl.textContent = '未填写信息，点击编辑';
+    metaEl.textContent = '未填写信息';
   }
 }
 function renderBabyInfo(){
@@ -1156,7 +1160,6 @@ function openBabyEdit(){
 }
 document.getElementById('editBabyBtn').addEventListener('click', openBabyEdit);
 document.getElementById('babyAvatarWrap').addEventListener('click', openBabyEdit);
-document.getElementById('feedBabyCard').addEventListener('click', openBabyEdit);
 document.getElementById('babyAvEditWrap').addEventListener('click', ()=>document.getElementById('babyAvatarInput').click());
 document.getElementById('babyAvatarInput').addEventListener('change', e=>{
   const file = e.target.files && e.target.files[0];
