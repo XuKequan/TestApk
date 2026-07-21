@@ -85,7 +85,7 @@
     padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
     -webkit-font-smoothing:antialiased;
   }
-  .wrap{max-width:520px;margin:0 auto;padding:18px 16px 40px;}
+  .wrap{max-width:520px;margin:0 auto;padding:18px 16px 88px;}
   header{display:flex;align-items:center;justify-content:space-between;margin:6px 2px 16px;}
   header h1{font-size:21px;margin:0;font-weight:700;letter-spacing:.5px;}
   header .sub{font-size:12px;color:var(--sub);margin-top:2px;}
@@ -216,10 +216,76 @@
   #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
   /* hidden native date input for day picking */
   #dayPicker{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px;}
+  /* 页面切换 + 底部导航 */
+  .page{min-height:60vh;}
+  .tabbar{position:fixed;left:0;right:0;bottom:0;max-width:520px;margin:0 auto;display:flex;
+    background:var(--card);box-shadow:0 -4px 16px rgba(0,0,0,.10);border-top:1px solid var(--line);z-index:40;}
+  .tabbar button{flex:1;border:none;background:transparent;color:var(--sub);padding:10px 0 12px;
+    font-size:12px;font-weight:600;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;}
+  .tabbar button .ic{font-size:21px;}
+  .tabbar button.on{color:var(--accent);}
+  /* 喂养页跳转卡片 */
+  .growjump{display:flex;align-items:center;justify-content:space-between;background:var(--card);
+    border-radius:var(--radius);padding:16px;margin:16px 0;box-shadow:var(--shadow);}
+  .gj-left{display:flex;align-items:center;gap:12px;}
+  .gj-ic{font-size:26px;}
+  .gj-t{font-size:16px;font-weight:700;color:var(--ink);}
+  .gj-s{font-size:12px;color:var(--sub);margin-top:2px;}
+  /* 成长页卡片 */
+  .card{background:var(--card);border-radius:var(--radius);padding:18px 16px;margin:16px 0;box-shadow:var(--shadow);}
+  .card h2{font-size:16px;margin:0 0 12px;}
+  .grow-summary{font-size:14px;color:var(--accent);font-weight:700;margin-bottom:12px;min-height:18px;}
+  .chartwrap{position:relative;width:100%;}
+  #growthChart{width:100%;display:block;}
+  .legend{display:flex;gap:18px;justify-content:center;margin-top:10px;font-size:13px;}
+  .lg-w{color:var(--accent);} .lg-h{color:var(--L);}
+  .btn-ok.full{width:100%;}
+  /* 成长页：添加记录按钮更大更圆润 */
+  #gAdd{font-size:17px;font-weight:800;padding:16px;margin-top:6px;border-radius:18px;letter-spacing:1px;}
+  /* 成长记录翻页 */
+  .pager{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:14px;}
+  .pager button{border:none;background:var(--line);color:var(--ink);border-radius:12px;
+    padding:9px 18px;font-size:14px;font-weight:600;cursor:pointer;}
+  .pager button:disabled{opacity:.4;cursor:default;}
+  .pager .pginfo{font-size:13px;color:var(--sub);min-width:54px;text-align:center;}
+  .gitem{background:var(--card);border-radius:16px;padding:13px 14px;margin-bottom:10px;
+    display:flex;align-items:center;gap:12px;box-shadow:var(--shadow);}
+  .gitem .info{flex:1;min-width:0;}
+  .gitem .date{font-size:15px;font-weight:700;}
+  .gitem .vals{font-size:13px;color:var(--sub);margin-top:2px;}
+  .gitem .acts{display:flex;gap:8px;}
+  .gitem .acts button{border:none;background:var(--line);color:var(--ink);border-radius:10px;
+    padding:8px 12px;font-size:13px;font-weight:600;cursor:pointer;}
+  .gitem .acts .del{background:#ff5a5a;color:#fff;}
+
+  /* 宝宝信息卡（展示 + 头像） */
+  .baby-head{display:flex;align-items:center;gap:14px;}
+  .baby-avatar{width:62px;height:62px;border-radius:50%;flex:0 0 62px;overflow:hidden;
+    background:var(--line);display:flex;align-items:center;justify-content:center;
+    border:1px solid var(--line);cursor:pointer;position:relative;}
+  .baby-avatar img{width:100%;height:100%;object-fit:cover;display:block;}
+  .baby-avatar .ph{font-size:32px;line-height:1;}
+  .baby-main{flex:1;min-width:0;}
+  .baby-name{font-size:18px;font-weight:800;color:var(--ink);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .baby-meta{font-size:13px;color:var(--sub);margin-top:3px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .baby-edit{margin-left:auto;}
+  /* 弹窗内头像编辑 */
+  .avatar-pick{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:14px;}
+  .avatar-pick .av{width:84px;height:84px;border-radius:50%;overflow:hidden;background:var(--line);
+    display:flex;align-items:center;justify-content:center;border:1px solid var(--line);}
+  .avatar-pick .av img{width:100%;height:100%;object-fit:cover;display:block;}
+  .avatar-pick .av .ph{font-size:42px;}
+  .avatar-upload{border:1px dashed var(--line);color:var(--sub);background:transparent;
+    border-radius:12px;padding:8px 14px;font-size:13px;cursor:pointer;}
+  .avatar-upload:hover{color:var(--accent);border-color:var(--accent);}
+
 </style>
 </head>
 <body>
 <div class="wrap">
+  <div class="page" id="pageFeed">
   <header>
     <div>
       <h1>喂养记录</h1>
@@ -242,10 +308,10 @@
       <div class="side" data-side="B">双侧<small>Both</small></div>
     </div>
     <div class="timerbtns">
-      <button class="mainbtn" id="mainBtn">开始亲喂</button>
+      <button class="mainbtn" id="mainBtn">开始喂养</button>
       <div class="btnrow" id="activeBtns" style="display:none">
         <button class="subbtn" id="pauseBtn">暂停</button>
-        <button class="subbtn stop" id="endBtn">结束亲喂</button>
+        <button class="subbtn stop" id="endBtn">结束喂养</button>
       </div>
     </div>
   </section>
@@ -254,6 +320,11 @@
     <div class="stat"><div class="n" id="stTodayN">0</div><div class="t">今日次数</div><div class="d" id="stTodayD">0分</div></div>
     <div class="stat"><div class="n" id="stYesN">0</div><div class="t">昨日次数</div><div class="d" id="stYesD">0分</div></div>
     <div class="stat"><div class="n" id="stAllN">0</div><div class="t">总计次数</div><div class="d" id="stAllD">0分</div></div>
+  </section>
+
+  <section class="growjump" id="growJumpCard">
+    <div class="gj-left"><span class="gj-ic">📈</span><div><div class="gj-t">宝宝成长</div><div class="gj-s">记录身高体重，查看成长曲线</div></div></div>
+    <button class="iconbtn" id="gotoGrow">查看 →</button>
   </section>
 
   <section class="hist">
@@ -267,16 +338,75 @@
     <div id="histList"></div>
   </section>
 
-  <div class="foot">
-    <button id="exportBtn">导出备份</button>
-    <button id="clearBtn">清空数据</button>
-  </div>
-</div>
+  </div><!-- /pageFeed -->
 
-<!-- 补记弹窗（亲喂） -->
+  <div class="page" id="pageGrow" style="display:none">
+    <header>
+      <div>
+        <h1>宝宝成长</h1>
+        <div class="sub">记录身高体重，见证每一步</div>
+      </div>
+      <div class="topbtns">
+        <button class="iconbtn" id="themeBtn2" title="切换到夜间模式">🌙</button>
+      </div>
+    </header>
+
+    <section class="card">
+      <div class="baby-head">
+        <div class="baby-avatar" id="babyAvatarWrap" title="点击编辑宝宝信息">
+          <img id="babyAvatar" alt="宝宝头像" style="display:none">
+          <span class="ph" id="babyAvatarPh">👶</span>
+        </div>
+        <div class="baby-main">
+          <div class="baby-name" id="babyDispName">宝宝</div>
+          <div class="baby-meta" id="babyDispMeta">未填写信息，点击右侧「编辑」</div>
+        </div>
+        <button class="iconbtn baby-edit" id="editBabyBtn">编辑</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>添加记录</h2>
+      <div class="mrow">
+        <div class="field" style="flex:1"><label>日期</label><input type="date" id="gDate"></div>
+      </div>
+      <div class="mrow">
+        <div class="field"><label>体重(kg)</label><input type="number" id="gWeight" step="0.01" min="0" inputmode="decimal" placeholder="如 6.5"></div>
+        <div class="field"><label>身高(cm)</label><input type="number" id="gHeight" step="0.1" min="0" inputmode="decimal" placeholder="如 62"></div>
+      </div>
+      <button class="btn-ok full" id="gAdd">添加记录</button>
+    </section>
+
+    <section class="card">
+      <h2>成长曲线</h2>
+      <div class="chartwrap"><canvas id="growthChart"></canvas></div>
+      <div class="legend"><span class="lg lg-w">● 体重(kg)</span><span class="lg lg-h">● 身高(cm)</span></div>
+    </section>
+
+    <section class="hist">
+      <h2>记录列表 <span class="cnt" id="growCnt"></span></h2>
+      <div id="growList"></div>
+      <div class="pager" id="growPager"></div>
+    </section>
+
+    <div class="foot">
+      <button id="importBtn">导入</button>
+      <button id="exportAllBtn">导出全部</button>
+      <button id="clearAllBtn">清空全部</button>
+    </div>
+  </div><!-- /pageGrow -->
+
+</div><!-- /.wrap -->
+
+<nav class="tabbar">
+  <button id="tabFeed" class="on"><span class="ic">🤱</span>喂养</button>
+  <button id="tabGrow"><span class="ic">📈</span>成长</button>
+</nav>
+
+<!-- 补记弹窗（喂养） -->
 <div class="overlay" id="overlay">
   <div class="modal">
-    <h3>补记一次亲喂</h3>
+    <h3>补记一次喂养</h3>
     <div class="field">
       <label>日期</label>
       <input type="date" id="mDate">
@@ -408,6 +538,53 @@
   </div>
 </div>
 
+<!-- 成长记录修改弹窗 -->
+<div class="overlay" id="growEditOverlay">
+  <div class="modal">
+    <h3>修改成长记录</h3>
+    <div class="field">
+      <label>日期</label>
+      <input type="date" id="geDate">
+    </div>
+    <div class="mrow">
+      <div class="field"><label>体重(kg)</label><input type="number" id="geWeight" step="0.01" min="0" inputmode="decimal"></div>
+      <div class="field"><label>身高(cm)</label><input type="number" id="geHeight" step="0.1" min="0" inputmode="decimal"></div>
+    </div>
+    <div class="acts">
+      <button class="btn-cancel" id="geCancel">取消</button>
+      <button class="btn-ok" id="geSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 宝宝信息编辑弹窗 -->
+<div class="overlay" id="babyEditOverlay">
+  <div class="modal">
+    <h3>宝宝信息</h3>
+    <div class="avatar-pick">
+      <div class="av" id="babyAvEditWrap">
+        <img id="babyAvEdit" alt="" style="display:none">
+        <span class="ph" id="babyAvEditPh">👶</span>
+      </div>
+      <label class="avatar-upload">上传头像
+        <input type="file" id="babyAvatarInput" accept="image/*" hidden>
+      </label>
+    </div>
+    <div class="field"><label>姓名</label><input type="text" id="babyName" placeholder="宝宝的名字" maxlength="20"></div>
+    <div class="field"><label>性别</label>
+      <div class="seg" id="babySex">
+        <button data-sex="M">男</button>
+        <button data-sex="F">女</button>
+      </div>
+    </div>
+    <div class="field"><label>出生日期</label><input type="date" id="babyBirth"></div>
+    <div class="acts">
+      <button class="btn-cancel" id="babyCancel">清除</button>
+      <button class="btn-ok" id="babySave">保存</button>
+    </div>
+  </div>
+</div>
+
 <input type="date" id="dayPicker">
 
 <div id="toast"></div>
@@ -416,7 +593,7 @@
 const KEY = 'bf_sessions_v1';
 const SIDE_NAME = {L:'左', R:'右', B:'双侧'};
 let sessions = load();
-// 根据上一次亲喂的侧别，默认取相反侧（上次左→默认右，上次右→默认左，双侧/无→左）
+// 根据上一次喂养的侧别，默认取相反侧（上次左→默认右，上次右→默认左，双侧/无→左）
 function computeDefaultSide(){
   const done = sessions.filter(s=>s.type==='nurse' && s.end!==null).sort((a,b)=>a.end-b.end);
   if(!done.length) return 'L';
@@ -552,6 +729,20 @@ function render(){
   renderStats();
   renderHistory();
 }
+/* 每秒刷新计时卡片：喂养中显示本次时长；空闲且有记录时显示距上次喂养的时长 */
+function tickUpdate(){
+  const clock = document.getElementById('clock');
+  const active = getActive();
+  if(active){
+    clock.textContent = fmtHMS(liveElapsed(active));
+  } else {
+    const done = sessions.filter(s=>s.end!==null);
+    if(done.length){
+      const lastS = done[done.length-1];
+      clock.textContent = fmtHMS(Date.now() - lastS.end);
+    }
+  }
+}
 function renderTimer(){
   const active = getActive();
   const label = document.getElementById('timerLabel');
@@ -561,9 +752,9 @@ function renderTimer(){
   const activeBtns = document.getElementById('activeBtns');
   const pauseBtn = document.getElementById('pauseBtn');
   const sides = document.getElementById('sides').children;
+  const done = sessions.filter(s=>s.end!==null);
 
   if(!active){
-    if(tick){ clearInterval(tick); tick = null; }
     label.textContent = '准备开始';
     clock.textContent = '00:00:00';
     mainBtn.style.display = '';
@@ -572,30 +763,36 @@ function renderTimer(){
       el.classList.toggle('on', el.dataset.side === selectedSide);
       el.style.pointerEvents = ''; el.style.opacity = '';
     }
-    const done = sessions.filter(s=>s.end!==null);
     if(done.length){
       const lastS = done[done.length-1];
-      last.textContent = '上次：'+fmtRelative(lastS.end)+' · '+fmtMinSec(netDuration(lastS));
-    } else { last.textContent = '还没有记录，开始第一次吧'; }
-    return;
-  }
-  mainBtn.style.display = 'none';
-  activeBtns.style.display = 'flex';
-  for(const el of sides){ el.classList.remove('on'); el.style.pointerEvents='none'; el.style.opacity='.5'; }
-
-  if(active.pausedAt){
-    label.textContent = '已暂停 · ' + SIDE_NAME[active.side];
-    clock.textContent = fmtHMS(liveElapsed(active));
-    pauseBtn.textContent = '继续';
-    last.textContent = '暂停于 ' + fmtClock(active.pausedAt);
-    if(tick){ clearInterval(tick); tick = null; }
+      label.textContent = '距上次喂养';
+      clock.textContent = fmtHMS(Date.now() - lastS.end);
+      last.textContent = '上次结束：' + fmtClock(lastS.end) + ' · 时长 ' + fmtMinSec(netDuration(lastS));
+    } else {
+      last.textContent = '还没有记录，开始第一次吧';
+    }
   } else {
-    label.textContent = '亲喂中 · ' + SIDE_NAME[active.side];
-    clock.textContent = fmtHMS(liveElapsed(active));
-    pauseBtn.textContent = '暂停';
-    last.textContent = '开始于 ' + fmtClock(active.start);
-    if(!tick) tick = setInterval(()=>{ clock.textContent = fmtHMS(liveElapsed(active)); }, 1000);
+    mainBtn.style.display = 'none';
+    activeBtns.style.display = 'flex';
+    for(const el of sides){ el.classList.remove('on'); el.style.pointerEvents='none'; el.style.opacity='.5'; }
+
+    if(active.pausedAt){
+      label.textContent = '已暂停 · ' + SIDE_NAME[active.side];
+      clock.textContent = fmtHMS(liveElapsed(active));
+      pauseBtn.textContent = '继续';
+      last.textContent = '暂停于 ' + fmtClock(active.pausedAt);
+    } else {
+      label.textContent = '喂养中 · ' + SIDE_NAME[active.side];
+      clock.textContent = fmtHMS(liveElapsed(active));
+      pauseBtn.textContent = '暂停';
+      last.textContent = '开始于 ' + fmtClock(active.start);
+    }
   }
+
+  // 喂养中 或 空闲但已有记录（需实时显示距上次喂养）时保持每秒刷新
+  const needTick = !!active || done.length > 0;
+  if(needTick){ if(!tick) tick = setInterval(tickUpdate, 1000); }
+  else { if(tick){ clearInterval(tick); tick = null; } }
 }
 function renderStats(){
   const done = sessions.filter(s=>s.end!==null);
@@ -628,7 +825,7 @@ function renderHistory(){
 
   document.getElementById('histCnt').textContent = daySessions.length ? ('共 '+daySessions.length+' 次') : '';
   if(!daySessions.length){
-    list.innerHTML = '<div class="empty">这一天还没有记录<br>点击下方按钮开始亲喂 🤱</div>';
+    list.innerHTML = '<div class="empty">这一天还没有记录<br>点击下方按钮开始喂养 🤱</div>';
     return;
   }
   let html = '';
@@ -711,7 +908,7 @@ bindTimeField('bTimeD', 9, 0);
 bindTimeField('eStartD', 9, 0);
 bindTimeField('eEndD', 9, 15);
 
-/* ---------- 补记（亲喂） ---------- */
+/* ---------- 补记（喂养） ---------- */
 let mSide = 'L';
 const overlay = document.getElementById('overlay');
 function openModal(){
@@ -893,29 +1090,6 @@ document.getElementById('dayPicker').addEventListener('change', e=>{
   if(e.target.value){ viewDate = new Date(e.target.value+'T00:00').getTime(); render(); }
 });
 
-/* ---------- 导出 / 清空 ---------- */
-document.getElementById('exportBtn').addEventListener('click', ()=>{
-  const json = JSON.stringify(sessions, null, 2);
-  if(window.AndroidBridge && window.AndroidBridge.exportData){
-    window.AndroidBridge.exportData(json);
-  } else {
-    try{
-      const blob = new Blob([json], {type:'application/json'});
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = '喂养记录_'+fmtDate(Date.now())+'.json';
-      a.click();
-      URL.revokeObjectURL(a.href);
-    }catch(err){ toast('导出失败：'+err.message); }
-  }
-});
-document.getElementById('clearBtn').addEventListener('click', ()=>{
-  confirmDialog('确定清空全部记录？此操作不可恢复。', ()=>{
-    sessions = []; selectedSide='L'; viewDate = startOfDay(Date.now()); save(); render();
-    toast('已清空全部记录');
-  }, '清空数据');
-});
-
 /* ---------- 确认弹窗通用按钮 ---------- */
 document.getElementById('cfCancel').addEventListener('click', ()=>document.getElementById('confirmOverlay').classList.remove('show'));
 document.getElementById('confirmOverlay').addEventListener('click', e=>{ if(e.target===e.currentTarget) e.currentTarget.classList.remove('show'); });
@@ -954,12 +1128,15 @@ function syncNativeBars(){
   }catch(e){}
 }
 function updateThemeBtn(){
-  const btn = document.getElementById('themeBtn');
   const t = currentTheme();
-  btn.textContent = (t === 'dark') ? '☀️' : '🌙';
-  btn.title = (t === 'dark') ? '切换到白天模式' : '切换到夜间模式';
+  const icon = (t === 'dark') ? '☀️' : '🌙';
+  const title = (t === 'dark') ? '切换到白天模式' : '切换到夜间模式';
+  const b1 = document.getElementById('themeBtn');
+  const b2 = document.getElementById('themeBtn2');
+  if(b1){ b1.textContent = icon; b1.title = title; }
+  if(b2){ b2.textContent = icon; b2.title = title; }
 }
-document.getElementById('themeBtn').addEventListener('click', ()=>{
+function toggleTheme(){
   const next = (currentTheme() === 'dark') ? 'light' : 'dark';
   document.documentElement.dataset.theme = next;
   try{ localStorage.setItem(THEME_KEY, next); }catch(e){}
@@ -967,10 +1144,403 @@ document.getElementById('themeBtn').addEventListener('click', ()=>{
   updateThemeBtn();
   syncNativeBars();
   buzz(12);
-});
+  // 主题色变了，重绘成长曲线（颜色取自 CSS 变量）
+  if(document.getElementById('pageGrow').style.display !== 'none') drawGrowthChart();
+}
+document.getElementById('themeBtn').addEventListener('click', toggleTheme);
+const _tb2 = document.getElementById('themeBtn2');
+if(_tb2) _tb2.addEventListener('click', toggleTheme);
 // 初始化按钮状态（主题已在 <head> 内联脚本应用，避免闪烁）
 updateThemeBtn();
 syncNativeBars();
+
+/* ---------- 页面切换（喂养 / 成长） ---------- */
+function showPage(which){
+  const feed = document.getElementById('pageFeed');
+  const grow = document.getElementById('pageGrow');
+  const tF = document.getElementById('tabFeed');
+  const tG = document.getElementById('tabGrow');
+  if(which === 'grow'){
+    feed.style.display = 'none';
+    grow.style.display = '';
+    tF.classList.remove('on'); tG.classList.add('on');
+    renderGrowth();           // 进入成长页时刷新列表与曲线
+  } else {
+    grow.style.display = 'none';
+    feed.style.display = '';
+    tG.classList.remove('on'); tF.classList.add('on');
+  }
+}
+document.getElementById('tabFeed').addEventListener('click', ()=>showPage('feed'));
+document.getElementById('tabGrow').addEventListener('click', ()=>showPage('grow'));
+document.getElementById('gotoGrow').addEventListener('click', ()=>showPage('grow'));
+
+/* ---------- 宝宝成长记录 ---------- */
+const KEY_INFO = 'bf_baby_info_v1';
+const KEY_GROW = 'bf_growth_v1';
+let babyInfo = loadInfo();
+let growth = loadGrowth();
+let growEditId = null;
+
+function loadInfo(){ try{ return JSON.parse(localStorage.getItem(KEY_INFO)) || null; }catch(e){ return null; } }
+function saveInfo(){ try{ localStorage.setItem(KEY_INFO, JSON.stringify(babyInfo)); }catch(e){} }
+function loadGrowth(){ try{ return JSON.parse(localStorage.getItem(KEY_GROW)) || []; }catch(e){ return []; } }
+function saveGrowth(){ try{ localStorage.setItem(KEY_GROW, JSON.stringify(growth)); }catch(e){} }
+
+function ageText(birthTs){
+  const days = Math.floor((Date.now() - birthTs) / 86400000);
+  if(days < 0) return '还未出生';
+  if(days < 30) return '出生 ' + days + ' 天';
+  const months = Math.floor(days / 30);
+  const rem = days % 30;
+  return months + ' 个月' + (rem ? (' ' + rem + ' 天') : '');
+}
+/* 宝宝信息：展示卡渲染（头像 / 姓名 / 月龄） */
+function renderBabyInfo(){
+  const img = document.getElementById('babyAvatar');
+  const ph = document.getElementById('babyAvatarPh');
+  const nameEl = document.getElementById('babyDispName');
+  const metaEl = document.getElementById('babyDispMeta');
+  if(babyInfo && babyInfo.avatar){
+    img.src = babyInfo.avatar; img.style.display = ''; ph.style.display = 'none';
+  } else {
+    img.removeAttribute('src'); img.style.display = 'none'; ph.style.display = '';
+  }
+  nameEl.textContent = (babyInfo && babyInfo.name) ? babyInfo.name : '宝宝';
+  if(babyInfo && (babyInfo.sex || babyInfo.birth)){
+    let s = '';
+    if(babyInfo.sex) s += (babyInfo.sex === 'M' ? '男' : '女');
+    if(babyInfo.birth){
+      const t = new Date(babyInfo.birth).getTime();
+      if(!isNaN(t)) s += (s ? ' · ' : '') + ageText(t);
+    }
+    metaEl.textContent = s || '未填写出生信息';
+  } else {
+    metaEl.textContent = '未填写信息，点击右侧「编辑」';
+  }
+}
+
+/* 打开宝宝信息编辑弹窗（含头像上传） */
+let babyAvatarDraft = null;
+function openBabyEdit(){
+  const name = document.getElementById('babyName');
+  const sex = document.getElementById('babySex');
+  const birth = document.getElementById('babyBirth');
+  const img = document.getElementById('babyAvEdit');
+  const ph = document.getElementById('babyAvEditPh');
+  name.value = babyInfo ? (babyInfo.name || '') : '';
+  birth.value = babyInfo ? (babyInfo.birth || '') : '';
+  sex.querySelectorAll('button').forEach(b=>b.classList.toggle('on', b.dataset.sex === (babyInfo ? (babyInfo.sex || '') : '')));
+  babyAvatarDraft = babyInfo ? (babyInfo.avatar || null) : null;
+  if(babyAvatarDraft){ img.src = babyAvatarDraft; img.style.display=''; ph.style.display='none'; }
+  else { img.removeAttribute('src'); img.style.display='none'; ph.style.display=''; }
+  document.getElementById('babyEditOverlay').classList.add('show');
+}
+document.getElementById('editBabyBtn').addEventListener('click', openBabyEdit);
+document.getElementById('babyAvatarWrap').addEventListener('click', openBabyEdit);
+document.getElementById('babyAvEditWrap').addEventListener('click', ()=>document.getElementById('babyAvatarInput').click());
+document.getElementById('babyAvatarInput').addEventListener('change', e=>{
+  const file = e.target.files && e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev=>{
+    babyAvatarDraft = ev.target.result;
+    const img = document.getElementById('babyAvEdit');
+    const ph = document.getElementById('babyAvEditPh');
+    img.src = babyAvatarDraft; img.style.display=''; ph.style.display='none';
+  };
+  reader.readAsDataURL(file);
+});
+document.querySelectorAll('#babySex button').forEach(b=>{
+  b.onclick = ()=>{ document.querySelectorAll('#babySex button').forEach(x=>x.classList.toggle('on', x===b)); };
+});
+document.getElementById('babySave').addEventListener('click', ()=>{
+  const name = document.getElementById('babyName').value.trim();
+  const birth = document.getElementById('babyBirth').value;
+  const sexBtn = document.querySelector('#babySex button.on');
+  const sex = sexBtn ? sexBtn.dataset.sex : '';
+  if(!name && !birth && !babyAvatarDraft){ toast('请至少填写姓名或出生日期'); return; }
+  babyInfo = { name: name || '', sex, birth, avatar: babyAvatarDraft };
+  saveInfo(); renderBabyInfo();
+  document.getElementById('babyEditOverlay').classList.remove('show');
+  toast('已保存宝宝信息');
+});
+document.getElementById('babyCancel').addEventListener('click', ()=>{
+  babyInfo = null; saveInfo(); renderBabyInfo();
+  document.getElementById('babyEditOverlay').classList.remove('show');
+  toast('已清除宝宝信息');
+});
+/* 点击弹窗外的遮罩区域关闭（仅丢弃草稿，不清空已保存信息） */
+document.getElementById('babyEditOverlay').addEventListener('click', e=>{ if(e.target===e.currentTarget) e.currentTarget.classList.remove('show'); });
+
+/* 添加成长记录 */
+document.getElementById('gDate').value = fmtDate(Date.now());
+document.getElementById('gAdd').addEventListener('click', ()=>{
+  const date = document.getElementById('gDate').value;
+  const w = parseFloat(document.getElementById('gWeight').value);
+  const h = parseFloat(document.getElementById('gHeight').value);
+  if(!date){ toast('请选择日期'); return; }
+  if(isNaN(w) && isNaN(h)){ toast('请至少填写体重或身高'); return; }
+  if(!isNaN(w) && w <= 0){ toast('体重需大于 0'); return; }
+  if(!isNaN(h) && h <= 0){ toast('身高需大于 0'); return; }
+  const ts = new Date(date + 'T00:00').getTime();
+  growth.push({ id: uid(), date: ts, weight: isNaN(w) ? null : w, height: isNaN(h) ? null : h });
+  growPage = 1; saveGrowth(); renderGrowth();
+  document.getElementById('gWeight').value = '';
+  document.getElementById('gHeight').value = '';
+  document.getElementById('gDate').value = fmtDate(Date.now());
+  toast('已添加记录');
+});
+
+/* 记录列表 + 曲线 */
+function renderGrowth(){
+  renderGrowList();
+  drawGrowthChart();
+}
+let growPage = 1;
+const GROW_PER_PAGE = 10;
+function renderGrowList(){
+  const list = document.getElementById('growList');
+  const pager = document.getElementById('growPager');
+  const sorted = growth.slice().sort((a,b)=>b.date - a.date);
+  const total = sorted.length;
+  const pages = Math.max(1, Math.ceil(total / GROW_PER_PAGE));
+  if(growPage > pages) growPage = pages;
+  document.getElementById('growCnt').textContent = total ? ('共 ' + total + ' 条') : '';
+  if(!total){
+    list.innerHTML = '<div class="empty">还没有成长记录<br>在上方添加体重 / 身高吧 📏</div>';
+    pager.innerHTML = '';
+    return;
+  }
+  const startIdx = (growPage - 1) * GROW_PER_PAGE;
+  const pageItems = sorted.slice(startIdx, startIdx + GROW_PER_PAGE);
+  let html = '';
+  for(const r of pageItems){
+    const d = new Date(r.date);
+    const dateStr = (d.getMonth()+1) + '月' + d.getDate() + '日';
+    const vals = [];
+    if(r.weight != null) vals.push('体重 ' + r.weight + ' kg');
+    if(r.height != null) vals.push('身高 ' + r.height + ' cm');
+    html += '<div class="gitem" data-id="'+r.id+'">'
+      + '<div class="info"><div class="date">'+dateStr+'</div>'
+      + '<div class="vals">'+vals.join(' · ')+'</div></div>'
+      + '<div class="acts"><button class="edit" data-id="'+r.id+'">修改</button>'
+      + '<button class="del" data-id="'+r.id+'">删除</button></div></div>';
+  }
+  list.innerHTML = html;
+  if(pages > 1){
+    pager.innerHTML = '<button id="gpPrev"' + (growPage<=1 ? ' disabled' : '') + '>上一页</button>'
+      + '<span class="pginfo">'+growPage+' / '+pages+'</span>'
+      + '<button id="gpNext"' + (growPage>=pages ? ' disabled' : '') + '>下一页</button>';
+  } else {
+    pager.innerHTML = '';
+  }
+}
+document.getElementById('growPager').addEventListener('click', e=>{
+  if(e.target.id === 'gpPrev' && growPage > 1){ growPage--; renderGrowList(); }
+  else if(e.target.id === 'gpNext'){ growPage++; renderGrowList(); }
+});
+document.getElementById('growList').addEventListener('click', e=>{
+  const delBtn = e.target.closest('.del');
+  const editBtn = e.target.closest('.edit');
+  if(delBtn){
+    const id = delBtn.dataset.id;
+    confirmDialog('删除这条成长记录？', ()=>{
+      growth = growth.filter(x=>x.id !== id);
+      growPage = 1; saveGrowth(); renderGrowth(); toast('已删除');
+    }, '删除记录');
+  } else if(editBtn){
+    openGrowEdit(editBtn.dataset.id);
+  }
+});
+function openGrowEdit(id){
+  const r = growth.find(x=>x.id === id); if(!r) return;
+  growEditId = id;
+  document.getElementById('geDate').value = fmtDate(r.date);
+  document.getElementById('geWeight').value = r.weight != null ? r.weight : '';
+  document.getElementById('geHeight').value = r.height != null ? r.height : '';
+  document.getElementById('growEditOverlay').classList.add('show');
+}
+document.getElementById('geCancel').addEventListener('click', ()=>document.getElementById('growEditOverlay').classList.remove('show'));
+document.getElementById('growEditOverlay').addEventListener('click', e=>{ if(e.target === e.currentTarget) e.currentTarget.classList.remove('show'); });
+document.getElementById('geSave').addEventListener('click', ()=>{
+  const r = growth.find(x=>x.id === growEditId); if(!r) return;
+  const date = document.getElementById('geDate').value;
+  if(!date){ toast('请选择日期'); return; }
+  const w = parseFloat(document.getElementById('geWeight').value);
+  const h = parseFloat(document.getElementById('geHeight').value);
+  r.date = new Date(date + 'T00:00').getTime();
+  r.weight = isNaN(w) ? null : w;
+  r.height = isNaN(h) ? null : h;
+  saveGrowth(); renderGrowth();
+  document.getElementById('growEditOverlay').classList.remove('show');
+  toast('已保存');
+});
+
+/* 导出 / 清空成长数据 */
+/* 导出 / 清空 / 导入（同时操纵喂养与成长两套数据） */
+function downloadJSON(obj, filename){
+  const json = JSON.stringify(obj, null, 2);
+  if(window.AndroidBridge && window.AndroidBridge.exportData){
+    window.AndroidBridge.exportData(json);
+  } else {
+    try{
+      const blob = new Blob([json], {type:'application/json'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }catch(err){ toast('导出失败：'+err.message); }
+  }
+}
+document.getElementById('exportAllBtn').addEventListener('click', ()=>{
+  downloadJSON({ sessions: sessions, info: babyInfo, records: growth }, '喂养与成长_'+fmtDate(Date.now())+'.json');
+});
+document.getElementById('clearAllBtn').addEventListener('click', ()=>{
+  confirmDialog('确定清空全部数据（喂养记录、成长记录、宝宝信息）？此操作不可恢复。', ()=>{
+    sessions = []; selectedSide='L'; viewDate = startOfDay(Date.now()); save();
+    growth = []; babyInfo = null; saveGrowth(); saveInfo();
+    renderBabyInfo(); renderGrowth(); render();
+    toast('已清空全部数据');
+  }, '清空全部数据');
+});
+/* 导入：仅导入喂养记录（兼容旧版裸数组 / 新格式 {sessions}） */
+document.getElementById('importBtn').addEventListener('click', ()=>{
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'application/json,.json';
+  input.onchange = e=>{
+    const file = e.target.files && e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ev=>{
+      try{
+        const parsed = JSON.parse(ev.target.result);
+        let arr = null;
+        if(Array.isArray(parsed)) arr = parsed;
+        else if(parsed && Array.isArray(parsed.sessions)) arr = parsed.sessions;
+        if(!arr || !arr.length){ toast('文件中没有可导入的喂养记录'); return; }
+        const ids = new Set(sessions.map(s=>s.id));
+        let added = 0;
+        for(const s of arr){
+          if(!s || s.start == null) continue;
+          const id = s.id || uid();
+          if(ids.has(id)) continue;
+          ids.add(id);
+          sessions.push(Object.assign({ id: id }, s));
+          added++;
+        }
+        if(added){ save(); render(); toast('已导入 '+added+' 条喂养记录'); }
+        else toast('没有新的喂养记录可导入');
+      }catch(err){ toast('解析失败：'+err.message); }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+});
+
+/* 成长曲线（Canvas，双轴：体重 kg / 身高 cm） */
+function drawGrowthChart(){
+  const cv = document.getElementById('growthChart');
+  if(!cv) return;
+  const wrap = cv.parentElement;
+  const cssW = wrap.clientWidth || 320;
+  const cssH = 240;
+  const dpr = window.devicePixelRatio || 1;
+  cv.width = Math.round(cssW * dpr);
+  cv.height = Math.round(cssH * dpr);
+  cv.style.width = cssW + 'px';
+  cv.style.height = cssH + 'px';
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, cssW, cssH);
+
+  const cs = getComputedStyle(document.documentElement);
+  const sub = (cs.getPropertyValue('--sub') || '#999').trim();
+  const line = (cs.getPropertyValue('--line') || '#eee').trim();
+  const accent = (cs.getPropertyValue('--accent') || '#ff7088').trim();
+  const blue = (cs.getPropertyValue('--L') || '#5b8def').trim();
+
+  const recs = growth.slice().sort((a,b)=>a.date - b.date);
+  if(recs.length < 2){
+    ctx.fillStyle = sub;
+    ctx.font = '14px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('至少需要 2 条记录才能绘制成长曲线', cssW/2, cssH/2);
+    return;
+  }
+
+  const padL = 38, padR = 42, padT = 16, padB = 28;
+  const plotW = cssW - padL - padR;
+  const plotH = cssH - padT - padB;
+  const x0 = padL, y0 = padT;
+
+  const weights = recs.map(r=>r.weight).filter(v=>v != null);
+  const heights = recs.map(r=>r.height).filter(v=>v != null);
+  const wPts = recs.map((r,i)=>({i, v:r.weight})).filter(p=>p.v != null);
+  const hPts = recs.map((r,i)=>({i, v:r.height})).filter(p=>p.v != null);
+
+  function yScale(val, mn, mx){
+    if(mx === mn) return y0 + plotH/2;
+    return y0 + plotH - (val - mn) / (mx - mn) * plotH;
+  }
+  function xAt(i){ return x0 + (recs.length === 1 ? 0 : i / (recs.length - 1) * plotW); }
+  function range(vals){
+    let mn = Math.min.apply(null, vals), mx = Math.max.apply(null, vals);
+    const p = (mx - mn) * 0.15 || 1;
+    return [mn - p, mx + p];
+  }
+  const wR = range(weights), hR = range(heights);
+
+  // 网格 + 坐标轴标签
+  const rows = 4;
+  ctx.lineWidth = 1;
+  ctx.font = '11px sans-serif';
+  for(let g = 0; g <= rows; g++){
+    const yy = y0 + plotH * g / rows;
+    ctx.strokeStyle = line;
+    ctx.beginPath(); ctx.moveTo(x0, yy); ctx.lineTo(x0 + plotW, yy); ctx.stroke();
+    const wv = wR[1] - (wR[1] - wR[0]) * g / rows;
+    ctx.fillStyle = accent; ctx.textAlign = 'right';
+    ctx.fillText(wv.toFixed(1), x0 - 6, yy + 4);
+    const hv = hR[1] - (hR[1] - hR[0]) * g / rows;
+    ctx.fillStyle = blue; ctx.textAlign = 'left';
+    ctx.fillText(hv.toFixed(0), x0 + plotW + 6, yy + 4);
+  }
+  // x 轴日期标签
+  ctx.fillStyle = sub; ctx.textAlign = 'center';
+  const xt = Math.min(recs.length, 5);
+  for(let t = 0; t < xt; t++){
+    const i = xt === 1 ? 0 : Math.round(t * (recs.length - 1) / (xt - 1));
+    const d = new Date(recs[i].date);
+    ctx.fillText((d.getMonth()+1) + '/' + d.getDate(), xAt(i), cssH - 8);
+  }
+
+  function drawLine(pts, mn, mx, color){
+    if(pts.length < 1) return;
+    ctx.strokeStyle = color; ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    pts.forEach((p, idx)=>{
+      const xx = xAt(p.i), yy = yScale(p.v, mn, mx);
+      if(idx === 0) ctx.moveTo(xx, yy); else ctx.lineTo(xx, yy);
+    });
+    ctx.stroke();
+    ctx.fillStyle = color;
+    pts.forEach(p=>{
+      const xx = xAt(p.i), yy = yScale(p.v, mn, mx);
+      ctx.beginPath(); ctx.arc(xx, yy, 3.2, 0, Math.PI * 2); ctx.fill();
+    });
+  }
+  drawLine(wPts, wR[0], wR[1], accent);
+  drawLine(hPts, hR[0], hR[1], blue);
+}
+window.addEventListener('resize', ()=>{
+  if(document.getElementById('pageGrow').style.display !== 'none') drawGrowthChart();
+});
+
+/* 初始化成长页表单 */
+renderBabyInfo();
 
 render();
 </script>
