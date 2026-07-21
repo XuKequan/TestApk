@@ -1,12 +1,18 @@
 package com.example.breastfeed;
 
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
+import android.content.ClipData;
+import android.content.Intent;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.View;
 import android.webkit.JavascriptInterface;
+import android.webkit.ValueCallback;
+import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -22,6 +28,9 @@ import java.util.Locale;
 public class MainActivity extends Activity {
 
     private WebView webView;
+    // 文件选择（头像上传等 <input type="file">）回调
+    private ValueCallback<Uri[]> uploadMessage;
+    private static final int REQUEST_SELECT_FILE = 100;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,16 +45,69 @@ public class MainActivity extends Activity {
         settings.setLoadWithOverviewMode(true);
         settings.setUseWideViewPort(true);
 
-        // 暴露给网页的 JS 桥：用于把备份导出为真实文件
+        // 暴露给网页的 JS 桥：用于把备份导出为真实文件 / 同步状态栏颜色
         webView.addJavascriptInterface(new JSBridge(), "AndroidBridge");
 
         // 留在应用内，不跳转到系统浏览器
         webView.setWebViewClient(new WebViewClient());
 
+        // 关键：实现文件选择器，否则网页里的 <input type="file"> 点击无反应
+        webView.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public boolean onShowFileChooser(WebView webView,
+                                             ValueCallback<Uri[]> filePathCallback,
+                                             WebChromeClient.FileChooserParams fileChooserParams) {
+                // 防止上一次回调未释放导致无法再次选择
+                if (uploadMessage != null) {
+                    uploadMessage.onReceiveValue(null);
+                    uploadMessage = null;
+                }
+                uploadMessage = filePathCallback;
+                Intent intent = fileChooserParams.createIntent();
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                try {
+                    startActivityForResult(intent, REQUEST_SELECT_FILE);
+                } catch (ActivityNotFoundException e) {
+                    uploadMessage = null;
+                    Toast.makeText(MainActivity.this, "未找到可用的文件选择应用", Toast.LENGTH_LONG).show();
+                    return false;
+                }
+                return true;
+            }
+        });
+
         setContentView(webView);
 
         // 加载打包进 APK 的本地页面（完全离线）
         webView.loadUrl("file:///android_asset/index.html");
+    }
+
+    /** 文件选择结果回传，必须交给网页的 input 元素 */
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQUEST_SELECT_FILE) {
+            if (uploadMessage == null) {
+                super.onActivityResult(requestCode, resultCode, data);
+                return;
+            }
+            Uri[] results = null;
+            if (resultCode == Activity.RESULT_OK && data != null) {
+                String dataString = data.getDataString();
+                ClipData clipData = data.getClipData();
+                if (clipData != null) {
+                    results = new Uri[clipData.getItemCount()];
+                    for (int i = 0; i < clipData.getItemCount(); i++) {
+                        results[i] = clipData.getItemAt(i).getUri();
+                    }
+                } else if (dataString != null) {
+                    results = new Uri[]{Uri.parse(dataString)};
+                }
+            }
+            uploadMessage.onReceiveValue(results);
+            uploadMessage = null;
+            return;
+        }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     /** 网页调用 window.AndroidBridge.exportData(json) 时，把 JSON 写到下载目录 */
