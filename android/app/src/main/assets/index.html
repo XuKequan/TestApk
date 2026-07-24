@@ -110,6 +110,8 @@
   .item .info{flex:1;min-width:0;}
   .item .time{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;}
   .item .meta{font-size:12px;color:var(--sub);margin-top:2px;}
+  .item .gap{font-size:12px;color:var(--accent);margin-top:3px;font-variant-numeric:tabular-nums;}
+  .item .gap.first{color:var(--sub);}
   .item .dur{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;}
   .empty{text-align:center;color:var(--sub);padding:40px 0;font-size:14px;}
   /* footer */
@@ -605,6 +607,17 @@ function fmtMinSec(ms){
   if(h>0) return h+'时'+m+'分'+s+'秒';
   return m+'分'+s+'秒';
 }
+/* 间隔显示：距上一次喂养的时长（天/小时/分钟，不带秒） */
+function fmtGap(ms){
+  if(ms < 60000) return '不到1分钟';
+  const totalMin = Math.round(ms/60000);
+  const days = Math.floor(totalMin/1440);
+  const hours = Math.floor((totalMin%1440)/60);
+  const mins = totalMin%60;
+  if(days>0) return days+'天'+(hours>0?hours+'小时':'')+(mins>0&&hours===0?mins+'分钟':'');
+  if(hours>0) return hours+'小时'+(mins>0?mins+'分钟':'');
+  return mins+'分钟';
+}
 function fmtClock(ts){
   const d = new Date(ts);
   return pad(d.getHours())+':'+pad(d.getMinutes());
@@ -787,6 +800,15 @@ function renderHistory(){
     .filter(s => isSameDay(s.start, viewDate))
     .sort((a,b)=> b.start - a.start);
 
+  /* 计算每条记录距上一次喂养的间隔：基于全部记录按开始时间升序，跨天也计入 */
+  const gapMap = {};
+  const allSorted = sessions.filter(s=> s.start != null).sort((a,b)=> a.start - b.start);
+  for(let i=1;i<allSorted.length;i++){
+    const prev = allSorted[i-1];
+    const pEnd = (prev.end != null) ? prev.end : prev.start;
+    gapMap[allSorted[i].id] = allSorted[i].start - pEnd;
+  }
+
   document.getElementById('histCnt').textContent = daySessions.length ? ('共 '+daySessions.length+' 次') : '';
   if(!daySessions.length){
     list.innerHTML = '<div class="empty">这一天还没有记录<br>点击下方按钮开始喂养 🤱</div>';
@@ -811,10 +833,16 @@ function renderHistory(){
       meta = SIDE_NAME[s.side] + (paused>60000 ? ' · 含暂停'+fmtMinSec(paused) : '');
       durStr = active ? fmtMinSec(liveElapsed(s)) : fmtMinSec(netDuration(s));
     }
+    let gapHtml;
+    if(Object.prototype.hasOwnProperty.call(gapMap, s.id)){
+      gapHtml = '<div class="gap">距上次 '+fmtGap(gapMap[s.id])+'</div>';
+    } else {
+      gapHtml = '<div class="gap first">首次记录</div>';
+    }
     html += '<div class="item" data-id="'+s.id+'">'
       + badge
       + '<div class="info"><div class="time">'+timeStr+'</div>'
-      + '<div class="meta">'+meta+'</div></div>'
+      + '<div class="meta">'+meta+'</div>'+gapHtml+'</div>'
       + '<div class="dur">'+durStr+'</div>'
       + '</div>';
   }
