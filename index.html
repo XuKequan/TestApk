@@ -49,6 +49,12 @@
     box-shadow:var(--shadow);cursor:pointer;white-space:nowrap;
   }
   .iconbtn.bottle{background:linear-gradient(160deg,var(--BT),#2a9b88);color:#fff;}
+  .iconbtn.on{background:linear-gradient(160deg,#e8b04b,#d99a2b);color:#3a2a05;}
+  /* 锁定模式：禁用喂养页内所有交互，仅查看数据（自动同步不受影响） */
+  #pageFeed.locked button:not(#lockBtn){ pointer-events:none; opacity:.45; }
+  #pageFeed.locked .item,
+  #pageFeed.locked .side{ pointer-events:none; }
+  #pageFeed.locked #lockBtn{ opacity:1; }
   /* timer card */
   .timer{
     background:var(--timer-grad);
@@ -273,6 +279,7 @@
     <div class="topbtns">
       <button class="iconbtn bottle" id="bottleBtn">🍼 瓶喂</button>
       <button class="iconbtn" id="addBtn">＋ 补记</button>
+      <button class="iconbtn" id="lockBtn">🔒 锁定</button>
     </div>
   </header>
 
@@ -1329,6 +1336,12 @@ async function syncNow(){
     const mg = mergeBoth(growth, remote.growth);
     let nb = babyInfo;
     if(babyScore(remote.baby) > babyScore(babyInfo)) nb = remote.baby;
+    // 不同步头像：合并后始终以本地头像为准（远端存储不含头像字段）
+    if(nb){
+      nb = Object.assign({}, nb);
+      nb.avatar = (babyInfo && babyInfo.avatar) ? babyInfo.avatar : (nb.avatar || '');
+      if(!nb.avatar) delete nb.avatar;
+    }
     const localSig = sigArr(sessions)+'#'+sigArr(growth)+'#'+babyScore(babyInfo);
     const remoteSig = sigArr(ms)+'#'+sigArr(mg)+'#'+babyScore(nb);
     if(localSig !== remoteSig){
@@ -1339,7 +1352,7 @@ async function syncNow(){
     const out = {
       sessions: sessions.map(s=> s.updatedAt ? s : Object.assign({}, s, {updatedAt:Date.now()})),
       growth: growth.map(g=> g.updatedAt ? g : Object.assign({}, g, {updatedAt:Date.now()})),
-      baby: (babyInfo && !babyInfo._deleted && !babyInfo.updatedAt) ? Object.assign({}, babyInfo, {updatedAt:Date.now()}) : babyInfo
+      baby: (() => { let b = (babyInfo && !babyInfo._deleted && !babyInfo.updatedAt) ? Object.assign({}, babyInfo, {updatedAt:Date.now()}) : babyInfo; if(b){ b = Object.assign({}, b); delete b.avatar; } return b; })()
     };
     await wdPut(cfg, out);
     wdLast = Date.now(); wdErr = ''; wdStatus = 'ok'; updateWdUI('ok');
@@ -1359,7 +1372,7 @@ function updateWdUI(status){
   else { el.textContent = '已同步 · ' + (wdLast ? fmtClock(wdLast) : ''); el.className = 'wd-status ok'; }
 }
 let wdIntStarted = false;
-function startWdInterval(){ if(wdIntStarted) return; wdIntStarted = true; setInterval(()=>{ const c = getWebDav(); if(c && c.url) syncNow(); }, 30000); }
+function startWdInterval(){ if(wdIntStarted) return; wdIntStarted = true; setInterval(()=>{ const c = getWebDav(); if(c && c.url) syncNow(); }, 60000); }
 (function initSync(){
   const u = document.getElementById('wdUrl'), us = document.getElementById('wdUser'), p = document.getElementById('wdPass');
   const cfg = getWebDav() || {};
@@ -1372,6 +1385,28 @@ function startWdInterval(){ if(wdIntStarted) return; wdIntStarted = true; setInt
   if(bNow) bNow.addEventListener('click', ()=>{ syncNow(); });
   updateWdUI('');
   if(cfg && cfg.url){ startWdInterval(); syncNow(); }
+})();
+
+/* 锁定模式：禁用喂养页所有交互（仅查看数据），自动同步不受影响 */
+let locked = false;
+try { locked = localStorage.getItem('bf_locked') === '1'; } catch(e){}
+function applyLock(){
+  const page = document.getElementById('pageFeed');
+  if(page) page.classList.toggle('locked', locked);
+  const b = document.getElementById('lockBtn');
+  if(b){
+    b.textContent = locked ? '🔓 解锁' : '🔒 锁定';
+    b.classList.toggle('on', locked);
+  }
+}
+(function initLock(){
+  const b = document.getElementById('lockBtn');
+  if(b) b.addEventListener('click', ()=>{
+    locked = !locked;
+    try{ localStorage.setItem('bf_locked', locked ? '1' : '0'); }catch(e){}
+    applyLock();
+  });
+  applyLock();
 })();
 
 /* 记录列表 + 曲线 */
