@@ -42,6 +42,8 @@ public class MainActivity extends Activity {
         settings.setDomStorageEnabled(true);   // 启用 localStorage（用于保存记录）
         settings.setDatabaseEnabled(true);
         settings.setAllowFileAccess(true);
+        // 放行 file:// 页面访问局域网 WebDAV（免 CORS，便于多端同步）
+        settings.setAllowUniversalAccessFromFileURLs(true);
         settings.setLoadWithOverviewMode(true);
         settings.setUseWideViewPort(true);
 
