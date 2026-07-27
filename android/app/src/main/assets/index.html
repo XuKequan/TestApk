@@ -120,6 +120,18 @@
     border:none;background:transparent;color:var(--sub);font-size:13px;
     padding:8px 12px;cursor:pointer;text-decoration:underline;
   }
+  .sync label{display:block;font-size:13px;color:var(--sub);margin:12px 0 4px;}
+  .sync input{width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--text);font-size:14px;}
+  .sync .hint{font-size:12px;color:var(--sub);line-height:1.6;margin:6px 0 2px;}
+  .sync-btns{display:flex;gap:10px;margin-top:14px;}
+  .sync-btns button{flex:1;border:none;border-radius:10px;padding:11px;font-size:14px;cursor:pointer;}
+  .sync-btns #wdSave{background:var(--accent);color:#fff;}
+  .sync-btns #wdNow{background:var(--card);color:var(--text);border:1px solid var(--line);}
+  .wd-status{margin-top:12px;font-size:13px;padding:8px 10px;border-radius:8px;}
+  .wd-status.none{color:var(--sub);}
+  .wd-status.ok{color:#0a8a3f;background:rgba(10,138,63,.1);}
+  .wd-status.syncing{color:#9a6b00;background:rgba(154,107,0,.1);}
+  .wd-status.error{color:#c0392b;background:rgba(192,57,43,.1);}
   /* modal */
   .overlay{
     position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;
@@ -360,6 +372,22 @@
       <div class="pager" id="growPager"></div>
     </section>
 
+    <section class="card sync">
+      <h2>多端同步（WebDAV）</h2>
+      <p class="hint">在 NAS 上开启 WebDAV 服务，填写同步文件路径（如 http://192.168.1.10:5005/breastfeed/store.json）。多台设备填写<b>同一个地址</b>即可互相同步喂养与成长数据。数据断网也能记录，联网后自动同步。</p>
+      <label>同步文件地址</label>
+      <input id="wdUrl" type="text" placeholder="http://NAS地址:端口/路径/store.json" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <label>用户名</label>
+      <input id="wdUser" type="text" placeholder="WebDAV 用户名" autocomplete="off">
+      <label>密码</label>
+      <input id="wdPass" type="password" placeholder="WebDAV 密码" autocomplete="off">
+      <div class="sync-btns">
+        <button id="wdSave">保存并同步</button>
+        <button id="wdNow">立即同步</button>
+      </div>
+      <div id="wdStatus" class="wd-status none">未配置同步</div>
+    </section>
+
     <div class="foot">
       <button id="importBtn">导入</button>
       <button id="exportAllBtn">导出全部</button>
@@ -579,8 +607,9 @@ let viewDate = startOfDay(Date.now());
 let editId = null;
 
 function load(){ try{ return JSON.parse(localStorage.getItem(KEY)) || []; }catch(e){ return []; } }
-function save(){ try{ localStorage.setItem(KEY, JSON.stringify(sessions)); }catch(e){ console.warn('save failed', e); } }
-function getActive(){ return sessions.find(s => s.end === null) || null; }
+let inSync = false;
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(sessions)); }catch(e){ console.warn('save failed', e); } if(!inSync) scheduleSync(); }
+function getActive(){ return sessions.find(s => s.end === null && !s._deleted) || null; }
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 function buzz(ms){ try{ navigator.vibrate && navigator.vibrate(ms); }catch(e){} }
 
@@ -718,7 +747,7 @@ function tickUpdate(){
   if(active){
     clock.textContent = fmtHMS(liveElapsed(active));
   } else {
-    const done = sessions.filter(s=>s.end!==null);
+    const done = sessions.filter(s=>s.end!==null && !s._deleted);
     if(done.length){
       const lastS = done[done.length-1];
       clock.textContent = fmtHMS(Date.now() - lastS.end);
@@ -734,7 +763,7 @@ function renderTimer(){
   const activeBtns = document.getElementById('activeBtns');
   const pauseBtn = document.getElementById('pauseBtn');
   const sides = document.getElementById('sides').children;
-  const done = sessions.filter(s=>s.end!==null);
+  const done = sessions.filter(s=>s.end!==null && !s._deleted);
 
   if(!active){
     label.textContent = '准备开始';
@@ -777,7 +806,7 @@ function renderTimer(){
   else { if(tick){ clearInterval(tick); tick = null; } }
 }
 function renderStats(){
-  const done = sessions.filter(s=>s.end!==null);
+  const done = sessions.filter(s=>s.end!==null && !s._deleted);
   const today = done.filter(s=>isSameDay(s.end,Date.now()));
   const yes = done.filter(s=>isSameDay(s.end,Date.now()-86400000));
   document.getElementById('stTodayN').textContent = today.length;
@@ -797,12 +826,12 @@ function renderHistory(){
   document.getElementById('todayBtn').style.display = (viewDate === today0) ? 'none' : '';
 
   const daySessions = sessions
-    .filter(s => isSameDay(s.start, viewDate))
+    .filter(s => isSameDay(s.start, viewDate) && !s._deleted)
     .sort((a,b)=> b.start - a.start);
 
   /* 计算每条记录距上一次喂养的间隔：基于全部记录按开始时间升序，跨天也计入 */
   const gapMap = {};
-  const allSorted = sessions.filter(s=> s.start != null).sort((a,b)=> a.start - b.start);
+  const allSorted = sessions.filter(s=> s.start != null && !s._deleted).sort((a,b)=> a.start - b.start);
   for(let i=1;i<allSorted.length;i++){
     const prev = allSorted[i-1];
     const pEnd = (prev.end != null) ? prev.end : prev.start;
@@ -856,7 +885,7 @@ document.getElementById('sides').addEventListener('click', e=>{
 });
 document.getElementById('mainBtn').addEventListener('click', ()=>{
   if(getActive()) return;
-  sessions.push({id:uid(), type:'nurse', start:Date.now(), end:null, side:selectedSide, pausedTotal:0, pausedAt:null});
+  sessions.push({id:uid(), type:'nurse', start:Date.now(), end:null, side:selectedSide, pausedTotal:0, pausedAt:null, updatedAt:Date.now()});
   buzz(30); save(); render();
 });
 document.getElementById('pauseBtn').addEventListener('click', ()=>{
@@ -867,6 +896,7 @@ document.getElementById('pauseBtn').addEventListener('click', ()=>{
   } else {
     active.pausedAt = Date.now(); buzz(20);
   }
+  active.updatedAt = Date.now();
   save(); render();
 });
 document.getElementById('endBtn').addEventListener('click', ()=>{
@@ -876,6 +906,7 @@ document.getElementById('endBtn').addEventListener('click', ()=>{
     active.pausedAt = null;
   }
   active.end = Date.now();
+  active.updatedAt = Date.now();
   selectedSide = computeDefaultSide();
   buzz([20,40,20]); save(); render();
 });
@@ -932,7 +963,7 @@ document.getElementById('mSave').addEventListener('click', ()=>{
   if(isNaN(start)||isNaN(end)){ toast('时间格式有误'); return; }
   if(end <= start){ toast('结束时间需晚于开始时间'); return; }
   if(end > Date.now()+60000){ toast('结束时间不能晚于现在'); return; }
-  sessions.push({id:uid(), type:'nurse', start, end, side:mSide, pausedTotal:0, pausedAt:null});
+  sessions.push({id:uid(), type:'nurse', start, end, side:mSide, pausedTotal:0, pausedAt:null, updatedAt:Date.now()});
   save(); render(); closeModal();
 });
 
@@ -959,7 +990,7 @@ document.getElementById('bSave').addEventListener('click', ()=>{
   const start = new Date(date+'T'+pad(h)+':'+pad(m)+':00').getTime();
   if(isNaN(start)){ toast('时间格式有误'); return; }
   if(start > Date.now()+60000){ toast('喂养时间不能晚于现在'); return; }
-  sessions.push({id:uid(), type:'bottle', start, end:start, volume:vol, pausedTotal:0, pausedAt:null});
+  sessions.push({id:uid(), type:'bottle', start, end:start, volume:vol, pausedTotal:0, pausedAt:null, updatedAt:Date.now()});
   save(); render(); closeBottle();
 });
 
@@ -996,7 +1027,7 @@ function openDetail(id){
   document.getElementById('dDelete').onclick = ()=>{
     detailOverlay.classList.remove('show');
     confirmDialog('删除这条记录？删除后不可恢复。', ()=>{
-      sessions = sessions.filter(x=>x.id!==id);
+      sessions = sessions.map(x => x.id===id ? Object.assign({}, x, {_deleted:true, updatedAt:Date.now(), end: x.end==null ? Date.now() : x.end}) : x);
       save(); render(); toast('已删除');
     }, '删除记录');
   };
@@ -1046,7 +1077,7 @@ document.getElementById('eSave').addEventListener('click', ()=>{
     const vol = parseInt(document.getElementById('eVol').value,10);
     if(!vol||vol<1){ toast('请填写容量'); return; }
     if(start > Date.now()+60000){ toast('时间不能晚于现在'); return; }
-    s.start = start; s.end = start; s.volume = vol;
+    s.start = start; s.end = start; s.volume = vol; s.updatedAt = Date.now();
   } else {
     const eh = timeFields['eEndD'].h, em = timeFields['eEndD'].m;
     const end = new Date(date+'T'+pad(eh)+':'+pad(em)+':00').getTime();
@@ -1055,7 +1086,7 @@ document.getElementById('eSave').addEventListener('click', ()=>{
     if(end > Date.now()+60000){ toast('结束时间不能晚于现在'); return; }
     let side = document.querySelector('#eSeg button.on');
     s.start = start; s.end = end; s.side = side ? side.dataset.side : s.side;
-    s.pausedTotal = 0; s.pausedAt = null;
+    s.pausedTotal = 0; s.pausedAt = null; s.updatedAt = Date.now();
   }
   save(); render(); editOverlay.classList.remove('show');
 });
@@ -1128,9 +1159,9 @@ let growth = loadGrowth();
 let growEditId = null;
 
 function loadInfo(){ try{ return JSON.parse(localStorage.getItem(KEY_INFO)) || null; }catch(e){ return null; } }
-function saveInfo(){ try{ localStorage.setItem(KEY_INFO, JSON.stringify(babyInfo)); }catch(e){} }
+function saveInfo(){ try{ localStorage.setItem(KEY_INFO, JSON.stringify(babyInfo)); }catch(e){} if(!inSync) scheduleSync(); }
 function loadGrowth(){ try{ return JSON.parse(localStorage.getItem(KEY_GROW)) || []; }catch(e){ return []; } }
-function saveGrowth(){ try{ localStorage.setItem(KEY_GROW, JSON.stringify(growth)); }catch(e){} }
+function saveGrowth(){ try{ localStorage.setItem(KEY_GROW, JSON.stringify(growth)); }catch(e){} if(!inSync) scheduleSync(); }
 
 function ageText(birthTs){
   const days = Math.floor((Date.now() - birthTs) / 86400000);
@@ -1210,13 +1241,13 @@ document.getElementById('babySave').addEventListener('click', ()=>{
   const sexBtn = document.querySelector('#babySex button.on');
   const sex = sexBtn ? sexBtn.dataset.sex : '';
   if(!name && !birth && !babyAvatarDraft){ toast('请至少填写姓名或出生日期'); return; }
-  babyInfo = { name: name || '', sex, birth, avatar: babyAvatarDraft };
+  babyInfo = { name: name || '', sex, birth, avatar: babyAvatarDraft, updatedAt: Date.now() };
   saveInfo(); renderBabyInfo();
   document.getElementById('babyEditOverlay').classList.remove('show');
   toast('已保存宝宝信息');
 });
 document.getElementById('babyCancel').addEventListener('click', ()=>{
-  babyInfo = null; saveInfo(); renderBabyInfo();
+  babyInfo = { _deleted: true, updatedAt: Date.now() }; saveInfo(); renderBabyInfo();
   document.getElementById('babyEditOverlay').classList.remove('show');
   toast('已清除宝宝信息');
 });
@@ -1234,13 +1265,114 @@ document.getElementById('gAdd').addEventListener('click', ()=>{
   if(!isNaN(w) && w <= 0){ toast('体重需大于 0'); return; }
   if(!isNaN(h) && h <= 0){ toast('身高需大于 0'); return; }
   const ts = new Date(date + 'T00:00').getTime();
-  growth.push({ id: uid(), date: ts, weight: isNaN(w) ? null : w, height: isNaN(h) ? null : h });
+  growth.push({ id: uid(), date: ts, weight: isNaN(w) ? null : w, height: isNaN(h) ? null : h, updatedAt: Date.now() });
   growPage = 1; saveGrowth(); renderGrowth();
   document.getElementById('gWeight').value = '';
   document.getElementById('gHeight').value = '';
   document.getElementById('gDate').value = fmtDate(Date.now());
   toast('已添加记录');
 });
+
+/* ===================== WebDAV 多端同步 ===================== */
+const WEBDAV_KEY = 'bf_webdav';
+let wdBusy = false, wdTimer = null, wdLast = 0, wdErr = '', wdStatus = '';
+function getWebDav(){ try{ return JSON.parse(localStorage.getItem(WEBDAV_KEY)||'null'); }catch(e){ return null; } }
+function wdBasic(cfg){ try{ return 'Basic ' + btoa(unescape(encodeURIComponent((cfg.user||'')+':'+(cfg.pass||'')))); }catch(e){ return ''; } }
+function wdHeaders(cfg, extra){ return Object.assign({ 'Authorization': wdBasic(cfg) }, extra||{}); }
+async function wdMkcol(cfg, url){
+  try{
+    const u = new URL(url); const segs = u.pathname.split('/').filter(Boolean); segs.pop();
+    let base = u.origin;
+    for(const seg of segs){ base += '/' + seg; try{ await fetch(base, { method:'MKCOL', headers: wdHeaders(cfg) }); }catch(e){} }
+  }catch(e){}
+}
+async function wdGet(cfg){
+  const r = await fetch(cfg.url, { method:'GET', headers: wdHeaders(cfg) });
+  if(r.status === 404) return null;
+  if(!r.ok) throw new Error('下载失败 HTTP '+r.status);
+  try{ return await r.json(); }catch(e){ return null; }
+}
+async function wdPut(cfg, obj){
+  await wdMkcol(cfg, cfg.url);
+  const r = await fetch(cfg.url, { method:'PUT', headers: wdHeaders(cfg, {'Content-Type':'application/json'}), body: JSON.stringify(obj) });
+  if(!r.ok) throw new Error('上传失败 HTTP '+r.status);
+}
+function mergeBoth(local, remote){
+  const map = new Map();
+  for(const x of (local||[])) if(x && x.id) map.set(x.id, x);
+  for(const x of (remote||[])){
+    if(!x || !x.id) continue;
+    const cur = map.get(x.id);
+    if(!cur || (x.updatedAt||0) > (cur.updatedAt||0)) map.set(x.id, x);
+  }
+  const out = []; const seen = new Set();
+  for(const x of (local||[])){ if(x && x.id){ out.push(map.get(x.id)); seen.add(x.id); } }
+  for(const x of (remote||[])){ if(x && x.id && !seen.has(x.id)){ out.push(x); seen.add(x.id); } }
+  return out;
+}
+function sigArr(arr){ return (arr||[]).map(x=> x && x.id ? x.id+':'+(x.updatedAt||0)+':'+(x._deleted?1:0) : '').join('|'); }
+function babyScore(b){ return b ? (b.updatedAt||0) : -1; }
+function scheduleSync(){
+  const cfg = getWebDav();
+  if(!cfg || !cfg.url || wdBusy) return;
+  clearTimeout(wdTimer);
+  wdTimer = setTimeout(()=>{ syncNow(); }, 1500);
+}
+async function syncNow(){
+  const cfg = getWebDav();
+  if(!cfg || !cfg.url || wdBusy) return;
+  wdBusy = true; updateWdUI('syncing');
+  const prev = inSync; inSync = true;
+  try{
+    const remote = await wdGet(cfg) || { sessions: [], growth: [], baby: null };
+    const ms = mergeBoth(sessions, remote.sessions);
+    const mg = mergeBoth(growth, remote.growth);
+    let nb = babyInfo;
+    if(babyScore(remote.baby) > babyScore(babyInfo)) nb = remote.baby;
+    const localSig = sigArr(sessions)+'#'+sigArr(growth)+'#'+babyScore(babyInfo);
+    const remoteSig = sigArr(ms)+'#'+sigArr(mg)+'#'+babyScore(nb);
+    if(localSig !== remoteSig){
+      sessions = ms; growth = mg; babyInfo = nb;
+      save(); saveGrowth(); saveInfo();
+      render(); renderGrowth(); renderBabyInfo();
+    }
+    const out = {
+      sessions: sessions.map(s=> s.updatedAt ? s : Object.assign({}, s, {updatedAt:Date.now()})),
+      growth: growth.map(g=> g.updatedAt ? g : Object.assign({}, g, {updatedAt:Date.now()})),
+      baby: (babyInfo && !babyInfo._deleted && !babyInfo.updatedAt) ? Object.assign({}, babyInfo, {updatedAt:Date.now()}) : babyInfo
+    };
+    await wdPut(cfg, out);
+    wdLast = Date.now(); wdErr = ''; wdStatus = 'ok'; updateWdUI('ok');
+  }catch(e){
+    wdErr = (e && e.message) ? e.message : String(e);
+    wdStatus = 'error'; updateWdUI('error');
+  }finally{
+    inSync = prev; wdBusy = false;
+  }
+}
+function updateWdUI(status){
+  const el = document.getElementById('wdStatus'); if(!el) return;
+  const cfg = getWebDav();
+  if(!cfg || !cfg.url){ el.textContent = '未配置同步'; el.className = 'wd-status none'; return; }
+  if(status === 'syncing'){ el.textContent = '同步中…'; el.className = 'wd-status syncing'; }
+  else if(status === 'error'){ el.textContent = '同步失败：' + wdErr; el.className = 'wd-status error'; }
+  else { el.textContent = '已同步 · ' + (wdLast ? fmtClock(wdLast) : ''); el.className = 'wd-status ok'; }
+}
+let wdIntStarted = false;
+function startWdInterval(){ if(wdIntStarted) return; wdIntStarted = true; setInterval(()=>{ const c = getWebDav(); if(c && c.url) syncNow(); }, 30000); }
+(function initSync(){
+  const u = document.getElementById('wdUrl'), us = document.getElementById('wdUser'), p = document.getElementById('wdPass');
+  const cfg = getWebDav() || {};
+  if(u) u.value = cfg.url || '';
+  if(us) us.value = cfg.user || '';
+  if(p) p.value = cfg.pass || '';
+  const saveCfg = ()=>{ const c = { url: u.value.trim(), user: us.value.trim(), pass: p.value }; localStorage.setItem(WEBDAV_KEY, JSON.stringify(c)); return c; };
+  const bSave = document.getElementById('wdSave'), bNow = document.getElementById('wdNow');
+  if(bSave) bSave.addEventListener('click', ()=>{ saveCfg(); startWdInterval(); toast('已保存同步配置'); syncNow(); });
+  if(bNow) bNow.addEventListener('click', ()=>{ syncNow(); });
+  updateWdUI('');
+  if(cfg && cfg.url){ startWdInterval(); syncNow(); }
+})();
 
 /* 记录列表 + 曲线 */
 function renderGrowth(){
@@ -1252,7 +1384,7 @@ const GROW_PER_PAGE = 10;
 function renderGrowList(){
   const list = document.getElementById('growList');
   const pager = document.getElementById('growPager');
-  const sorted = growth.slice().sort((a,b)=>b.date - a.date);
+  const sorted = growth.slice().filter(g=>!g._deleted).sort((a,b)=>b.date - a.date);
   const total = sorted.length;
   const pages = Math.max(1, Math.ceil(total / GROW_PER_PAGE));
   if(growPage > pages) growPage = pages;
@@ -1296,7 +1428,7 @@ document.getElementById('growList').addEventListener('click', e=>{
   if(delBtn){
     const id = delBtn.dataset.id;
     confirmDialog('删除这条成长记录？', ()=>{
-      growth = growth.filter(x=>x.id !== id);
+      growth = growth.map(x => x.id === id ? Object.assign({}, x, {_deleted:true, updatedAt:Date.now()}) : x);
       growPage = 1; saveGrowth(); renderGrowth(); toast('已删除');
     }, '删除记录');
   } else if(editBtn){
@@ -1322,6 +1454,7 @@ document.getElementById('geSave').addEventListener('click', ()=>{
   r.date = new Date(date + 'T00:00').getTime();
   r.weight = isNaN(w) ? null : w;
   r.height = isNaN(h) ? null : h;
+  r.updatedAt = Date.now();
   saveGrowth(); renderGrowth();
   document.getElementById('growEditOverlay').classList.remove('show');
   toast('已保存');
@@ -1379,7 +1512,7 @@ document.getElementById('importBtn').addEventListener('click', ()=>{
             const id = s.id || uid();
             if(ids.has(id)) continue;
             ids.add(id);
-            sessions.push(Object.assign({ id: id }, s));
+            sessions.push(Object.assign({ id: id, updatedAt: Date.now() }, s));
             added++;
           }
           if(added){ save(); render(); }
@@ -1392,14 +1525,14 @@ document.getElementById('importBtn').addEventListener('click', ()=>{
             const id = g.id || uid();
             if(gids.has(id)) continue;
             gids.add(id);
-            growth.push(Object.assign({ id: id }, g));
+            growth.push(Object.assign({ id: id, updatedAt: Date.now() }, g));
             addedG++;
           }
           if(addedG){ saveGrowth(); renderGrowth(); }
         }
         // 宝宝信息
         if(parsed && parsed.info){
-          babyInfo = parsed.info;
+          babyInfo = Object.assign({}, parsed.info, { updatedAt: Date.now() });
           saveInfo(); renderBabyInfo();
         }
         const msg = '已导入 ' + added + ' 条喂养记录' + (addedG ? '、' + addedG + ' 条成长记录' : '') + (parsed && parsed.info ? '，宝宝信息已更新' : '');
