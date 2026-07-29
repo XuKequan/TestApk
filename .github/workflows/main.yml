@@ -6,9 +6,16 @@ on:
   push:
     branches: [ main, master ]
 
+permissions:
+  contents: write   # 允许将固定签名密钥持久化为 Release 资产
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      KEY_ALIAS: breastfeed
+      KEYSTORE_PASSWORD: BfTrk!kq2026
+      KEY_PASSWORD: BfTrk!kq2026
     steps:
       - name: Checkout 代码
         uses: actions/checkout@v4
@@ -28,15 +35,42 @@ jobs:
       - name: 安装 SDK 平台与构建工具
         run: sdkmanager "platforms;android-34" "build-tools;34.0.0"
 
-      - name: 构建 Debug APK (依赖缓存)
+      - name: 准备固定签名密钥（首次生成并持久化，之后复用，确保升级签名一致）
+        env:
+          GH_TOKEN: ${{ github.token }}
+        working-directory: android
+        run: |
+          set -e
+          REL="signing-key"
+          if gh release view "$REL" >/dev/null 2>&1; then
+            gh release download "$REL" -p signing-key.jks -D . || true
+          fi
+          if [ -f signing-key.jks ]; then
+            echo "复用已持久化的签名密钥"
+          else
+            echo "生成新的固定签名密钥"
+            keytool -genkeypair -v -keystore signing-key.jks -storetype JKS \
+              -keyalg RSA -keysize 2048 -validity 10000 -alias "$KEY_ALIAS" \
+              -storepass "$KEYSTORE_PASSWORD" -keypass "$KEY_PASSWORD" \
+              -dname "CN=breastfeed, O=TestApk, C=CN"
+            if gh release view "$REL" >/dev/null 2>&1; then
+              gh release upload "$REL" signing-key.jks --clobber
+            else
+              gh release create "$REL" signing-key.jks \
+                -t "Signing Key (do not delete)" \
+                -n "固定签名密钥，用于覆盖安装升级。删除此 Release 会导致下次构建生成新密钥，需卸载重装。"
+            fi
+          fi
+
+      - name: 构建 Release APK（固定签名）
         uses: gradle/gradle-build-action@v3
         with:
           build-root-directory: android
           gradle-version: '8.9'
-          arguments: :app:assembleDebug --no-daemon --stacktrace
+          arguments: :app:assembleRelease --no-daemon --stacktrace
 
       - name: 上传 APK 产物
         uses: actions/upload-artifact@v4
         with:
           name: breastfeed-tracker-apk
-          path: android/app/build/outputs/apk/debug/*.apk
+          path: android/app/build/outputs/apk/release/*.apk
