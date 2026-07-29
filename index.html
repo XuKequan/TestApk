@@ -1318,7 +1318,6 @@ function mergeBoth(local, remote){
   return out;
 }
 function sigArr(arr){ return (arr||[]).map(x=> x && x.id ? x.id+':'+(x.updatedAt||0)+':'+(x._deleted?1:0) : '').join('|'); }
-function babyScore(b){ return b ? (b.updatedAt||0) : -1; }
 function scheduleSync(){
   const cfg = getWebDav();
   if(!cfg || !cfg.url || wdBusy) return;
@@ -1331,28 +1330,26 @@ async function syncNow(){
   wdBusy = true; updateWdUI('syncing');
   const prev = inSync; inSync = true;
   try{
-    const remote = await wdGet(cfg) || { sessions: [], growth: [], baby: null };
+    // 宝宝信息仅保存在本地，不同步、也不从远端更新
+    const remote = await wdGet(cfg) || { sessions: [], growth: [] };
     const ms = mergeBoth(sessions, remote.sessions);
     const mg = mergeBoth(growth, remote.growth);
-    let nb = babyInfo;
-    if(babyScore(remote.baby) > babyScore(babyInfo)) nb = remote.baby;
-    // 不同步头像：合并后始终以本地头像为准（远端存储不含头像字段）
-    if(nb){
-      nb = Object.assign({}, nb);
-      nb.avatar = (babyInfo && babyInfo.avatar) ? babyInfo.avatar : (nb.avatar || '');
-      if(!nb.avatar) delete nb.avatar;
-    }
-    const localSig = sigArr(sessions)+'#'+sigArr(growth)+'#'+babyScore(babyInfo);
-    const remoteSig = sigArr(ms)+'#'+sigArr(mg)+'#'+babyScore(nb);
+    const localSig = sigArr(sessions)+'#'+sigArr(growth);
+    const remoteSig = sigArr(ms)+'#'+sigArr(mg);
     if(localSig !== remoteSig){
-      sessions = ms; growth = mg; babyInfo = nb;
-      save(); saveGrowth(); saveInfo();
-      render(); renderGrowth(); renderBabyInfo();
+      sessions = ms; growth = mg;
+      save(); saveGrowth();
+      render(); renderGrowth();
     }
+    // 锁定状态下：只读同步文件，不上传更新
+    if(locked){
+      wdLast = Date.now(); wdErr = ''; wdStatus = 'ok'; updateWdUI('ok');
+      return;
+    }
+    // 同步内容仅含喂养(sessions)与成长(growth)
     const out = {
       sessions: sessions.map(s=> s.updatedAt ? s : Object.assign({}, s, {updatedAt:Date.now()})),
-      growth: growth.map(g=> g.updatedAt ? g : Object.assign({}, g, {updatedAt:Date.now()})),
-      baby: (() => { let b = (babyInfo && !babyInfo._deleted && !babyInfo.updatedAt) ? Object.assign({}, babyInfo, {updatedAt:Date.now()}) : babyInfo; if(b){ b = Object.assign({}, b); delete b.avatar; } return b; })()
+      growth: growth.map(g=> g.updatedAt ? g : Object.assign({}, g, {updatedAt:Date.now()}))
     };
     await wdPut(cfg, out);
     wdLast = Date.now(); wdErr = ''; wdStatus = 'ok'; updateWdUI('ok');
