@@ -31,6 +31,12 @@ android {
                 signingConfig signingConfigs.release
             }
         }
+        debug {
+            // 用固定签名密钥签署 debug 包：保留完整资源(图标等)，且升级时签名一致
+            if (rootProject.file("signing-key.jks").exists()) {
+                signingConfig signingConfigs.release
+            }
+        }
     }
 
     compileOptions {
