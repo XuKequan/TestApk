@@ -14,6 +14,15 @@ android {
         versionName '1.1'
     }
 
+    signingConfigs {
+        release {
+            storeFile rootProject.file("signing-key.jks")
+            storePassword "BfTrk!kq2026"
+            keyAlias "breastfeed"
+            keyPassword "BfTrk!kq2026"
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -21,15 +30,6 @@ android {
             if (rootProject.file("signing-key.jks").exists()) {
                 signingConfig signingConfigs.release
             }
-        }
-    }
-
-    signingConfigs {
-        release {
-            storeFile rootProject.file("signing-key.jks")
-            storePassword "BfTrk!kq2026"
-            keyAlias "breastfeed"
-            keyPassword "BfTrk!kq2026"
         }
     }
 
