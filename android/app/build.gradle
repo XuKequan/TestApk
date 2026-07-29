@@ -17,6 +17,19 @@ android {
     buildTypes {
         release {
             minifyEnabled false
+            // 使用固定的签名密钥（CI 生成并持久化），保证覆盖安装升级时签名一致
+            if (rootProject.file("signing-key.jks").exists()) {
+                signingConfig signingConfigs.release
+            }
+        }
+    }
+
+    signingConfigs {
+        release {
+            storeFile rootProject.file("signing-key.jks")
+            storePassword "BfTrk!kq2026"
+            keyAlias "breastfeed"
+            keyPassword "BfTrk!kq2026"
         }
     }
 
