@@ -389,11 +389,44 @@
     </div>
   </div><!-- /pageGrow -->
 
+  <div class="page" id="pageVaccine" style="display:none">
+    <header>
+      <div>
+        <h1>疫苗接种</h1>
+        <div class="sub">记录宝宝的每一次接种 💉</div>
+      </div>
+    </header>
+
+    <section class="card compact">
+      <h2>添加接种记录</h2>
+      <div class="mrow">
+        <div class="field" style="flex:1"><label>疫苗名称</label><input type="text" id="vName" autocomplete="off" placeholder="如 乙肝疫苗"></div>
+      </div>
+      <div class="mrow">
+        <div class="field"><label>接种日期</label><input type="date" id="vDate"></div>
+        <div class="field"><label>剂次</label><input type="text" id="vDose" autocomplete="off" placeholder="如 第1剂"></div>
+      </div>
+      <div class="mrow">
+        <div class="field" style="flex:1"><label>接种部位 / 机构</label><input type="text" id="vSite" autocomplete="off" placeholder="如 左上臂 / 社区卫生服务中心"></div>
+      </div>
+      <div class="mrow">
+        <div class="field" style="flex:1"><label>备注</label><input type="text" id="vNote" autocomplete="off" placeholder="厂家、批号、反应等"></div>
+      </div>
+      <button class="btn-ok full" id="vAdd">添加记录</button>
+    </section>
+
+    <section class="hist">
+      <h2>接种记录 <span class="cnt" id="vacCnt"></span></h2>
+      <div id="vacList"></div>
+    </section>
+  </div><!-- /pageVaccine -->
+
 </div><!-- /.wrap -->
 
 <nav class="tabbar">
   <button id="tabFeed" class="on"><span class="ic">🤱</span>喂养</button>
   <button id="tabGrow"><span class="ic">📈</span>成长</button>
+  <button id="tabVaccine"><span class="ic">💉</span>疫苗</button>
 </nav>
 
 <!-- 补记弹窗（喂养） -->
@@ -515,6 +548,33 @@
     <div class="acts">
       <button class="btn-cancel" id="pCancel">取消</button>
       <button class="btn-ok" id="pOk">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- 疫苗接种：修改弹窗 -->
+<div class="overlay" id="vacEditOverlay">
+  <div class="modal">
+    <h3>修改接种记录</h3>
+    <div class="field">
+      <label>疫苗名称</label>
+      <input type="text" id="veName" autocomplete="off">
+    </div>
+    <div class="mrow">
+      <div class="field"><label>接种日期</label><input type="date" id="veDate"></div>
+      <div class="field"><label>剂次</label><input type="text" id="veDose" autocomplete="off"></div>
+    </div>
+    <div class="field">
+      <label>接种部位 / 机构</label>
+      <input type="text" id="veSite" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>备注</label>
+      <input type="text" id="veNote" autocomplete="off">
+    </div>
+    <div class="acts">
+      <button class="btn-cancel" id="veCancel">取消</button>
+      <button class="btn-ok" id="veSave">保存</button>
     </div>
   </div>
 </div>
@@ -711,6 +771,8 @@ function confirmDialog(msg, onOk, title){
   ok.onclick = ()=>{ ov.classList.remove('show'); onOk(); };
   cancel.onclick = ()=>{ ov.classList.remove('show'); };
 }
+/* HTML 转义，避免用户输入（疫苗名称/备注）造成 XSS */
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
 /* ---------- 滚轮时间选择器 ---------- */
 let pickerApply = null;
@@ -1148,23 +1210,23 @@ if('serviceWorker' in navigator){
 
 /* ---------- 页面切换（喂养 / 成长） ---------- */
 function showPage(which){
-  const feed = document.getElementById('pageFeed');
-  const grow = document.getElementById('pageGrow');
-  const tF = document.getElementById('tabFeed');
-  const tG = document.getElementById('tabGrow');
-  if(which === 'grow'){
-    feed.style.display = 'none';
-    grow.style.display = '';
-    tF.classList.remove('on'); tG.classList.add('on');
-    renderGrowth();           // 进入成长页时刷新列表与曲线
-  } else {
-    grow.style.display = 'none';
-    feed.style.display = '';
-    tG.classList.remove('on'); tF.classList.add('on');
+  const map = {
+    feed: { page: document.getElementById('pageFeed'), tab: document.getElementById('tabFeed') },
+    grow: { page: document.getElementById('pageGrow'), tab: document.getElementById('tabGrow') },
+    vac:  { page: document.getElementById('pageVaccine'), tab: document.getElementById('tabVaccine') }
+  };
+  for(const k in map){
+    if(!map[k].page || !map[k].tab) continue;
+    const active = (k === which);
+    map[k].page.style.display = active ? '' : 'none';
+    map[k].tab.classList.toggle('on', active);
   }
+  if(which === 'grow') renderGrowth();   // 进入成长页时刷新列表与曲线
+  if(which === 'vac')  renderVaccine();  // 进入疫苗页时刷新列表
 }
 document.getElementById('tabFeed').addEventListener('click', ()=>showPage('feed'));
 document.getElementById('tabGrow').addEventListener('click', ()=>showPage('grow'));
+document.getElementById('tabVaccine').addEventListener('click', ()=>showPage('vac'));
 
 /* ---------- 宝宝成长记录 ---------- */
 const KEY_INFO = 'bf_baby_info_v1';
@@ -1177,6 +1239,13 @@ function loadInfo(){ try{ return JSON.parse(localStorage.getItem(KEY_INFO)) || n
 function saveInfo(){ try{ localStorage.setItem(KEY_INFO, JSON.stringify(babyInfo)); }catch(e){} if(!inSync) scheduleSync(); }
 function loadGrowth(){ try{ return JSON.parse(localStorage.getItem(KEY_GROW)) || []; }catch(e){ return []; } }
 function saveGrowth(){ try{ localStorage.setItem(KEY_GROW, JSON.stringify(growth)); }catch(e){} if(!inSync) scheduleSync(); }
+
+/* ---------- 疫苗接种记录（本地保存，不纳入 WebDAV 同步） ---------- */
+const KEY_VAC = 'bf_vaccines_v1';
+let vaccines = loadVaccines();
+let vacEditId = null;
+function loadVaccines(){ try{ return JSON.parse(localStorage.getItem(KEY_VAC)) || []; }catch(e){ return []; } }
+function saveVaccines(){ try{ localStorage.setItem(KEY_VAC, JSON.stringify(vaccines)); }catch(e){ console.warn('save vaccines failed', e); } }
 
 function ageText(birthTs){
   const days = Math.floor((Date.now() - birthTs) / 86400000);
@@ -1530,12 +1599,13 @@ function downloadJSON(obj, filename){
   }
 }
 document.getElementById('exportAllBtn').addEventListener('click', ()=>{
-  downloadJSON({ sessions: sessions, info: babyInfo, records: growth }, '喂养与成长_'+fmtDate(Date.now())+'.json');
+  downloadJSON({ sessions: sessions, info: babyInfo, records: growth, vaccines: vaccines }, '喂养与成长与疫苗_'+fmtDate(Date.now())+'.json');
 });
 document.getElementById('clearAllBtn').addEventListener('click', ()=>{
-  confirmDialog('确定清空全部数据（喂养记录、成长记录、宝宝信息）？此操作不可恢复。', ()=>{
+  confirmDialog('确定清空全部数据（喂养记录、成长记录、宝宝信息、疫苗接种）？此操作不可恢复。', ()=>{
     sessions = []; selectedSide='L'; viewDate = startOfDay(Date.now()); save();
     growth = []; babyInfo = null; saveGrowth(); saveInfo();
+    vaccines = []; saveVaccines(); renderVaccine();
     renderBabyInfo(); renderGrowth(); render();
     toast('已清空全部数据');
   }, '清空全部数据');
@@ -1587,14 +1657,127 @@ document.getElementById('importBtn').addEventListener('click', ()=>{
           babyInfo = Object.assign({}, parsed.info, { updatedAt: Date.now() });
           saveInfo(); renderBabyInfo();
         }
-        const msg = '已导入 ' + added + ' 条喂养记录' + (addedG ? '、' + addedG + ' 条成长记录' : '') + (parsed && parsed.info ? '，宝宝信息已更新' : '');
-        if(added || addedG || (parsed && parsed.info)) toast(msg);
+        // 疫苗接种
+        let addedV = 0;
+        if(parsed && Array.isArray(parsed.vaccines)){
+          const vids = new Set(vaccines.map(v=>v.id));
+          for(const v of parsed.vaccines){
+            if(!v || v.start == null && v.date == null) continue;
+            const id = v.id || uid();
+            if(vids.has(id)) continue;
+            vids.add(id);
+            vaccines.push(Object.assign({ id: id, updatedAt: Date.now() }, v));
+            addedV++;
+          }
+          if(addedV){ saveVaccines(); renderVaccine(); }
+        }
+        const msg = '已导入 ' + added + ' 条喂养记录' + (addedG ? '、' + addedG + ' 条成长记录' : '') + (addedV ? '、' + addedV + ' 条疫苗记录' : '') + (parsed && parsed.info ? '，宝宝信息已更新' : '');
+        if(added || addedG || addedV || (parsed && parsed.info)) toast(msg);
         else toast('没有新的数据可导入');
       }catch(err){ toast('解析失败：'+err.message); }
     };
     reader.readAsText(file);
   };
   input.click();
+});
+
+/* ---------- 疫苗接种页面逻辑 ---------- */
+function renderVaccine(){ renderVacList(); }
+let vacPage = 1;
+const VAC_PER_PAGE = 30;
+function renderVacList(){
+  const list = document.getElementById('vacList');
+  if(!list) return;
+  const sorted = vaccines.slice().filter(v=>!v._deleted).sort((a,b)=>b.date - a.date);
+  const total = sorted.length;
+  const cnt = document.getElementById('vacCnt');
+  if(cnt) cnt.textContent = total ? ('共 ' + total + ' 条') : '';
+  if(!total){
+    list.innerHTML = '<div class="empty">还没有接种记录<br>在上方添加第一针吧 💉</div>';
+    return;
+  }
+  const pages = Math.max(1, Math.ceil(total / VAC_PER_PAGE));
+  if(vacPage > pages) vacPage = pages;
+  const startIdx = (vacPage - 1) * VAC_PER_PAGE;
+  const items = sorted.slice(startIdx, startIdx + VAC_PER_PAGE);
+  let html = '';
+  for(const v of items){
+    const d = new Date(v.date);
+    const dateStr = (d.getMonth()+1) + '月' + d.getDate() + '日';
+    const sub = [];
+    if(v.dose) sub.push(esc(v.dose));
+    if(v.site) sub.push(esc(v.site));
+    html += '<div class="gitem" data-id="'+v.id+'">'
+      + '<div class="info"><div class="date">'+esc(v.name || '(未命名)')+' · '+dateStr+'</div>'
+      + (sub.length ? '<div class="vals">'+sub.join(' · ')+'</div>' : '')
+      + (v.note ? '<div class="vals">'+esc(v.note)+'</div>' : '')
+      + '</div>'
+      + '<div class="acts"><button class="edit" data-id="'+v.id+'">修改</button>'
+      + '<button class="del" data-id="'+v.id+'">删除</button></div></div>';
+  }
+  list.innerHTML = html;
+}
+document.getElementById('vAdd').addEventListener('click', ()=>{
+  const name = document.getElementById('vName').value.trim();
+  const date = document.getElementById('vDate').value;
+  if(!name){ toast('请填写疫苗名称'); return; }
+  if(!date){ toast('请选择接种日期'); return; }
+  const ts = new Date(date + 'T00:00').getTime();
+  vaccines.push({
+    id: uid(), name: name, date: ts,
+    dose: document.getElementById('vDose').value.trim(),
+    site: document.getElementById('vSite').value.trim(),
+    note: document.getElementById('vNote').value.trim(),
+    updatedAt: Date.now()
+  });
+  saveVaccines(); renderVaccine();
+  document.getElementById('vName').value = '';
+  document.getElementById('vDose').value = '';
+  document.getElementById('vSite').value = '';
+  document.getElementById('vNote').value = '';
+  document.getElementById('vDate').value = fmtDate(Date.now());
+  toast('已添加记录');
+});
+document.getElementById('vacList').addEventListener('click', e=>{
+  const delBtn = e.target.closest('.del');
+  const editBtn = e.target.closest('.edit');
+  if(delBtn){
+    const id = delBtn.dataset.id;
+    confirmDialog('删除这条接种记录？', ()=>{
+      vaccines = vaccines.map(x => x.id === id ? Object.assign({}, x, {_deleted:true, updatedAt:Date.now()}) : x);
+      vacPage = 1; saveVaccines(); renderVaccine(); toast('已删除');
+    }, '删除记录');
+  } else if(editBtn){
+    openVacEdit(editBtn.dataset.id);
+  }
+});
+function openVacEdit(id){
+  const v = vaccines.find(x=>x.id === id); if(!v) return;
+  vacEditId = id;
+  document.getElementById('veName').value = v.name || '';
+  document.getElementById('veDate').value = fmtDate(v.date);
+  document.getElementById('veDose').value = v.dose || '';
+  document.getElementById('veSite').value = v.site || '';
+  document.getElementById('veNote').value = v.note || '';
+  document.getElementById('vacEditOverlay').classList.add('show');
+}
+document.getElementById('veCancel').addEventListener('click', ()=>document.getElementById('vacEditOverlay').classList.remove('show'));
+document.getElementById('vacEditOverlay').addEventListener('click', e=>{ if(e.target === e.currentTarget) e.currentTarget.classList.remove('show'); });
+document.getElementById('veSave').addEventListener('click', ()=>{
+  const v = vaccines.find(x=>x.id === vacEditId); if(!v) return;
+  const name = document.getElementById('veName').value.trim();
+  const date = document.getElementById('veDate').value;
+  if(!name){ toast('请填写疫苗名称'); return; }
+  if(!date){ toast('请选择接种日期'); return; }
+  v.name = name;
+  v.date = new Date(date + 'T00:00').getTime();
+  v.dose = document.getElementById('veDose').value.trim();
+  v.site = document.getElementById('veSite').value.trim();
+  v.note = document.getElementById('veNote').value.trim();
+  v.updatedAt = Date.now();
+  saveVaccines(); renderVaccine();
+  document.getElementById('vacEditOverlay').classList.remove('show');
+  toast('已保存');
 });
 
 /* 成长曲线（Canvas，单条曲线：体重 kg 或 身高 cm，各自独立绘制） */
