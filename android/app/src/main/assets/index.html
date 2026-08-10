@@ -144,7 +144,7 @@
     align-items:center;justify-content:center;padding:20px;z-index:50;
   }
   .overlay.show{display:flex;}
-  .modal{background:var(--card);border-radius:20px;padding:22px;width:100%;max-width:380px;box-shadow:var(--shadow);}
+  .modal{background:var(--card);border-radius:20px;padding:22px;width:100%;max-width:380px;box-shadow:var(--shadow);max-height:86vh;overflow-y:auto;}
   .modal h3{margin:0 0 14px;font-size:18px;}
   .modal p{margin:0 0 16px;font-size:14px;color:var(--sub);line-height:1.5;}
   .field{margin-bottom:14px;}
@@ -209,7 +209,7 @@
   .card h2{font-size:16px;margin:0 0 12px;}
   .grow-summary{font-size:14px;color:var(--accent);font-weight:700;margin-bottom:12px;min-height:18px;}
   .chartwrap{position:relative;width:100%;}
-  #growthChart{width:100%;display:block;}
+  #growthChartW, #growthChartH{width:100%;display:block;}
   .legend{display:flex;gap:18px;justify-content:center;margin-top:10px;font-size:13px;}
   .lg-w{color:var(--accent);} .lg-h{color:var(--L);}
   .btn-ok.full{width:100%;}
@@ -368,8 +368,10 @@
     </section>
 
     <section class="card">
-      <h2>成长曲线</h2>
-      <div class="chartwrap"><canvas id="growthChart"></canvas></div>
+      <h2>体重曲线 (kg)</h2>
+      <div class="chartwrap"><canvas id="growthChartW"></canvas></div>
+      <h2>身高曲线 (cm)</h2>
+      <div class="chartwrap"><canvas id="growthChartH"></canvas></div>
       <div class="legend"><span class="lg lg-w">● 体重(kg)</span><span class="lg lg-h">● 身高(cm)</span></div>
     </section>
 
@@ -379,25 +381,10 @@
       <div class="pager" id="growPager"></div>
     </section>
 
-    <section class="card sync">
-      <h2>多端同步（WebDAV）</h2>
-      <p class="hint">在 NAS 上开启 WebDAV 服务，填写同步文件路径（如 http://192.168.1.10:5005/breastfeed/store.json）。多台设备填写<b>同一个地址</b>即可互相同步喂养与成长数据。数据断网也能记录，联网后自动同步。</p>
-      <label>同步文件地址</label>
-      <input id="wdUrl" type="text" placeholder="http://NAS地址:端口/路径/store.json" autocomplete="off" autocapitalize="off" spellcheck="false">
-      <label>用户名</label>
-      <input id="wdUser" type="text" placeholder="WebDAV 用户名" autocomplete="off">
-      <label>密码</label>
-      <input id="wdPass" type="password" placeholder="WebDAV 密码" autocomplete="off">
-      <div class="sync-btns">
-        <button id="wdSave">保存并同步</button>
-        <button id="wdNow">立即同步</button>
-      </div>
-      <div id="wdStatus" class="wd-status none">未配置同步</div>
-    </section>
-
     <div class="foot">
       <button id="importBtn">导入</button>
       <button id="exportAllBtn">导出全部</button>
+      <button id="syncSetBtn">同步设置</button>
       <button id="clearAllBtn">清空全部</button>
     </div>
   </div><!-- /pageGrow -->
@@ -593,20 +580,40 @@
 
 <input type="date" id="dayPicker">
 
+<!-- 同步设置弹窗（WebDAV） -->
+<div class="overlay" id="syncOverlay">
+  <div class="modal">
+    <h3>多端同步设置（WebDAV）</h3>
+    <p class="hint">在 NAS 上开启 WebDAV 服务，填写同步文件路径（如 http://192.168.1.10:5005/breastfeed/store.json）。多台设备填写<b>同一个地址</b>即可互相同步喂养与成长数据。数据断网也能记录，联网后自动同步。</p>
+    <div class="field"><label>同步文件地址</label>
+      <input id="wdUrl" type="text" placeholder="http://NAS地址:端口/路径/store.json" autocomplete="off" autocapitalize="off" spellcheck="false">
+    </div>
+    <div class="field"><label>用户名</label>
+      <input id="wdUser" type="text" placeholder="WebDAV 用户名" autocomplete="off">
+    </div>
+    <div class="field"><label>密码</label>
+      <input id="wdPass" type="password" placeholder="WebDAV 密码" autocomplete="off">
+    </div>
+    <div class="sync-btns">
+      <button id="wdSave">保存并同步</button>
+      <button id="wdNow">立即同步</button>
+    </div>
+    <div id="wdStatus" class="wd-status none">未配置同步</div>
+    <div class="acts">
+      <button class="btn-cancel" id="syncClose">关闭</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
 const KEY = 'bf_sessions_v1';
 const SIDE_NAME = {L:'左', R:'右', B:'双侧'};
 let sessions = load();
-// 根据上一次喂养的侧别，默认取相反侧（上次左→默认右，上次右→默认左，双侧/无→左）
+// 喂养方式默认为「双侧」
 function computeDefaultSide(){
-  const done = sessions.filter(s=>s.type==='nurse' && s.end!==null).sort((a,b)=>a.end-b.end);
-  if(!done.length) return 'L';
-  const last = done[done.length-1].side;
-  if(last==='L') return 'R';
-  if(last==='R') return 'L';
-  return 'L';
+  return 'B';
 }
 let selectedSide = computeDefaultSide();
 let tick = null;
@@ -1093,7 +1100,8 @@ document.getElementById('eSave').addEventListener('click', ()=>{
     if(end > Date.now()+60000){ toast('结束时间不能晚于现在'); return; }
     let side = document.querySelector('#eSeg button.on');
     s.start = start; s.end = end; s.side = side ? side.dataset.side : s.side;
-    s.pausedTotal = 0; s.pausedAt = null; s.updatedAt = Date.now();
+    // 保留原有暂停信息（修改记录时不再清零）
+    s.updatedAt = Date.now();
   }
   save(); render(); editOverlay.classList.remove('show');
 });
@@ -1384,6 +1392,18 @@ function startWdInterval(){ if(wdIntStarted) return; wdIntStarted = true; setInt
   if(cfg && cfg.url){ startWdInterval(); syncNow(); }
 })();
 
+/* 同步设置弹窗开关 */
+(function initSyncOverlay(){
+  const ov = document.getElementById('syncOverlay');
+  const open = ()=>{ const cfg = getWebDav() || {}; const u = document.getElementById('wdUrl'); if(u) u.value = cfg.url || ''; ov.classList.add('show'); };
+  const close = ()=> ov.classList.remove('show');
+  const bOpen = document.getElementById('syncSetBtn');
+  if(bOpen) bOpen.addEventListener('click', open);
+  const bClose = document.getElementById('syncClose');
+  if(bClose) bClose.addEventListener('click', close);
+  if(ov) ov.addEventListener('click', e=>{ if(e.target === ov) close(); });
+})();
+
 /* 锁定模式：禁用喂养页所有交互（仅查看数据），自动同步不受影响 */
 let locked = false;
 try { locked = localStorage.getItem('bf_locked') === '1'; } catch(e){}
@@ -1577,9 +1597,8 @@ document.getElementById('importBtn').addEventListener('click', ()=>{
   input.click();
 });
 
-/* 成长曲线（Canvas，双轴：体重 kg / 身高 cm） */
-function drawGrowthChart(){
-  const cv = document.getElementById('growthChart');
+/* 成长曲线（Canvas，单条曲线：体重 kg 或 身高 cm，各自独立绘制） */
+function drawOneChart(cv, getVal, color, unit){
   if(!cv) return;
   const wrap = cv.parentElement;
   const cssW = wrap.clientWidth || 320;
@@ -1596,41 +1615,34 @@ function drawGrowthChart(){
   const cs = getComputedStyle(document.documentElement);
   const sub = (cs.getPropertyValue('--sub') || '#999').trim();
   const line = (cs.getPropertyValue('--line') || '#eee').trim();
-  const accent = (cs.getPropertyValue('--accent') || '#ff7088').trim();
-  const blue = (cs.getPropertyValue('--L') || '#5b8def').trim();
 
   const recs = growth.slice().sort((a,b)=>a.date - b.date);
-  if(recs.length < 2){
+  const pts = recs.map((r,i)=>({i, v:getVal(r)})).filter(p=>p.v != null);
+  if(pts.length < 2){
     ctx.fillStyle = sub;
     ctx.font = '14px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('至少需要 2 条记录才能绘制成长曲线', cssW/2, cssH/2);
+    ctx.fillText('至少需要 2 条记录才能绘制' + unit + '曲线', cssW/2, cssH/2);
     return;
   }
 
-  const padL = 38, padR = 42, padT = 16, padB = 28;
+  const padL = 42, padR = 16, padT = 16, padB = 28;
   const plotW = cssW - padL - padR;
   const plotH = cssH - padT - padB;
   const x0 = padL, y0 = padT;
-
-  const weights = recs.map(r=>r.weight).filter(v=>v != null);
-  const heights = recs.map(r=>r.height).filter(v=>v != null);
-  const wPts = recs.map((r,i)=>({i, v:r.weight})).filter(p=>p.v != null);
-  const hPts = recs.map((r,i)=>({i, v:r.height})).filter(p=>p.v != null);
 
   function yScale(val, mn, mx){
     if(mx === mn) return y0 + plotH/2;
     return y0 + plotH - (val - mn) / (mx - mn) * plotH;
   }
   function xAt(i){ return x0 + (recs.length === 1 ? 0 : i / (recs.length - 1) * plotW); }
-  function range(vals){
-    let mn = Math.min.apply(null, vals), mx = Math.max.apply(null, vals);
-    const p = (mx - mn) * 0.15 || 1;
-    return [mn - p, mx + p];
-  }
-  const wR = range(weights), hR = range(heights);
 
-  // 网格 + 坐标轴标签
+  const vals = pts.map(p=>p.v);
+  let mn = Math.min.apply(null, vals), mx = Math.max.apply(null, vals);
+  const p = (mx - mn) * 0.15 || 1;
+  mn -= p; mx += p;
+
+  // 网格 + y 轴标签
   const rows = 4;
   ctx.lineWidth = 1;
   ctx.font = '11px sans-serif';
@@ -1638,12 +1650,9 @@ function drawGrowthChart(){
     const yy = y0 + plotH * g / rows;
     ctx.strokeStyle = line;
     ctx.beginPath(); ctx.moveTo(x0, yy); ctx.lineTo(x0 + plotW, yy); ctx.stroke();
-    const wv = wR[1] - (wR[1] - wR[0]) * g / rows;
-    ctx.fillStyle = accent; ctx.textAlign = 'right';
-    ctx.fillText(wv.toFixed(1), x0 - 6, yy + 4);
-    const hv = hR[1] - (hR[1] - hR[0]) * g / rows;
-    ctx.fillStyle = blue; ctx.textAlign = 'left';
-    ctx.fillText(hv.toFixed(0), x0 + plotW + 6, yy + 4);
+    const v = mx - (mx - mn) * g / rows;
+    ctx.fillStyle = color; ctx.textAlign = 'right';
+    ctx.fillText(unit === 'kg' ? v.toFixed(1) : v.toFixed(0), x0 - 6, yy + 4);
   }
   // x 轴日期标签
   ctx.fillStyle = sub; ctx.textAlign = 'center';
@@ -1654,23 +1663,25 @@ function drawGrowthChart(){
     ctx.fillText((d.getMonth()+1) + '/' + d.getDate(), xAt(i), cssH - 8);
   }
 
-  function drawLine(pts, mn, mx, color){
-    if(pts.length < 1) return;
-    ctx.strokeStyle = color; ctx.lineWidth = 2.5;
-    ctx.beginPath();
-    pts.forEach((p, idx)=>{
-      const xx = xAt(p.i), yy = yScale(p.v, mn, mx);
-      if(idx === 0) ctx.moveTo(xx, yy); else ctx.lineTo(xx, yy);
-    });
-    ctx.stroke();
-    ctx.fillStyle = color;
-    pts.forEach(p=>{
-      const xx = xAt(p.i), yy = yScale(p.v, mn, mx);
-      ctx.beginPath(); ctx.arc(xx, yy, 3.2, 0, Math.PI * 2); ctx.fill();
-    });
-  }
-  drawLine(wPts, wR[0], wR[1], accent);
-  drawLine(hPts, hR[0], hR[1], blue);
+  // 曲线 + 数据点
+  ctx.strokeStyle = color; ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  pts.forEach((p, idx)=>{
+    const xx = xAt(p.i), yy = yScale(p.v, mn, mx);
+    if(idx === 0) ctx.moveTo(xx, yy); else ctx.lineTo(xx, yy);
+  });
+  ctx.stroke();
+  ctx.fillStyle = color;
+  pts.forEach(p=>{
+    const xx = xAt(p.i), yy = yScale(p.v, mn, mx);
+    ctx.beginPath(); ctx.arc(xx, yy, 3.2, 0, Math.PI * 2); ctx.fill();
+  });
+}
+function drawGrowthChart(){
+  const accent = (getComputedStyle(document.documentElement).getPropertyValue('--accent') || '#ff7088').trim();
+  const blue = (getComputedStyle(document.documentElement).getPropertyValue('--L') || '#5b8def').trim();
+  drawOneChart(document.getElementById('growthChartW'), r=>r.weight, accent, 'kg');
+  drawOneChart(document.getElementById('growthChartH'), r=>r.height, blue, 'cm');
 }
 window.addEventListener('resize', ()=>{
   if(document.getElementById('pageGrow').style.display !== 'none') drawGrowthChart();
