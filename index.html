@@ -19,254 +19,7 @@
   }catch(e){}
 })();
 </script>
-<style>
-  :root{
-    --bg:#fff5f3; --card:#ffffff; --ink:#3a2e2e; --sub:#9a8a8a;
-    --accent:#ff7088; --accent-d:#f2516c; --line:#f1e3df;
-    --L:#5b8def; --R:#ff7eb3; --B:#9b6dd6; --BT:#3bb6a0;
-    --shadow:0 8px 24px rgba(255,112,136,.12);
-    --radius:22px;
-    --accent-soft:rgba(255,112,136,.08);
-    --timer-grad:linear-gradient(160deg,var(--accent),var(--accent-d));
-    --timer-ink:#fff; --timer-border:transparent;
-  }
-  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-  html,body{margin:0;padding:0;}
-  body{
-    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
-    background:var(--bg); color:var(--ink);
-    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-    -webkit-font-smoothing:antialiased;
-  }
-  .wrap{max-width:520px;margin:0 auto;padding:18px 16px 88px;}
-  header{display:flex;align-items:center;justify-content:space-between;margin:6px 2px 16px;}
-  header h1{font-size:21px;margin:0;font-weight:700;letter-spacing:.5px;}
-  header .sub{font-size:12px;color:var(--sub);margin-top:2px;}
-  .topbtns{display:flex;gap:8px;}
-  .iconbtn{
-    border:none;background:var(--card);color:var(--ink);
-    border-radius:14px;padding:9px 14px;font-size:14px;font-weight:600;
-    box-shadow:var(--shadow);cursor:pointer;white-space:nowrap;
-  }
-  .iconbtn.bottle{background:linear-gradient(160deg,var(--BT),#2a9b88);color:#fff;}
-  .iconbtn.on{background:linear-gradient(160deg,#e8b04b,#d99a2b);color:#3a2a05;}
-  /* 锁定模式：禁用喂养页内所有交互，仅查看数据（自动同步不受影响） */
-  #pageFeed.locked button:not(#lockBtn){ pointer-events:none; opacity:.45; }
-  #pageFeed.locked .item,
-  #pageFeed.locked .side{ pointer-events:none; }
-  #pageFeed.locked #lockBtn{ opacity:1; }
-  /* timer card */
-  .timer{
-    background:var(--timer-grad);
-    border-radius:var(--radius);padding:22px 20px 24px;color:var(--timer-ink);
-    border:1px solid var(--timer-border);
-    box-shadow:var(--shadow);text-align:center;position:relative;overflow:hidden;
-  }
-  .timer .label{font-size:13px;opacity:.9;}
-  .clock{font-size:54px;font-weight:800;letter-spacing:1px;margin:8px 0 4px;font-variant-numeric:tabular-nums;}
-  .last{font-size:13px;opacity:.92;min-height:18px;}
-  .sides{display:flex;gap:10px;justify-content:center;margin:18px 0 20px;}
-  .side{
-    flex:1;max-width:130px;border:2px solid rgba(255,255,255,.55);
-    background:rgba(255,255,255,.12);color:#fff;border-radius:16px;
-    padding:12px 0;font-size:15px;font-weight:700;cursor:pointer;
-    transition:.15s;user-select:none;
-  }
-  .side small{display:block;font-size:11px;font-weight:500;opacity:.85;margin-top:2px;}
-  .side.on{background:#fff;color:var(--accent-d);border-color:#fff;}
-  .timerbtns{margin-top:4px;}
-  .mainbtn{
-    width:100%;border:none;border-radius:18px;padding:17px 0;font-size:18px;
-    font-weight:800;cursor:pointer;background:#fff;color:var(--accent-d);
-    box-shadow:0 6px 16px rgba(0,0,0,.12);transition:.12s;
-  }
-  .mainbtn:active{transform:scale(.98);}
-  .mainbtn.stop{background:rgba(0,0,0,.18);color:#fff;}
-  .btnrow{display:flex;gap:12px;}
-  .subbtn{
-    flex:1;border:2px solid rgba(255,255,255,.7);background:rgba(255,255,255,.14);
-    color:#fff;border-radius:18px;padding:18px 0;font-size:18px;font-weight:800;cursor:pointer;transition:.12s;
-  }
-  .subbtn:active{transform:scale(.98);}
-  /* stats */
-  .stats{display:flex;gap:12px;margin:18px 0;}
-  .stat{flex:1;background:var(--card);border-radius:18px;padding:14px 12px;text-align:center;box-shadow:var(--shadow);}
-  .stat .n{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;}
-  .stat .t{font-size:12px;color:var(--sub);margin-top:3px;}
-  .stat .d{font-size:12px;color:var(--accent);margin-top:4px;font-weight:600;}
-  /* history */
-  .hist h2{font-size:16px;margin:22px 4px 8px;display:flex;justify-content:space-between;align-items:center;}
-  .hist h2 .cnt{font-size:13px;color:var(--sub);font-weight:500;}
-  .daynav{display:flex;align-items:center;justify-content:center;gap:12px;margin:0 4px 12px;}
-  .daynav button{border:none;background:var(--card);color:var(--ink);border-radius:12px;
-    width:42px;height:38px;font-size:20px;font-weight:700;box-shadow:var(--shadow);cursor:pointer;}
-  .daynav button:disabled{opacity:.35;cursor:default;}
-  .daynav .dl{font-size:15px;font-weight:700;min-width:96px;text-align:center;cursor:pointer;text-decoration:underline dotted;}
-  .daynav .today{font-size:13px;color:var(--accent);border:none;background:transparent;font-weight:700;cursor:pointer;padding:4px 8px;}
-  .item{
-    background:var(--card);border-radius:16px;padding:13px 14px;margin-bottom:10px;
-    display:flex;align-items:center;gap:12px;box-shadow:var(--shadow);cursor:pointer;
-  }
-  .badge{
-    width:40px;height:40px;border-radius:12px;flex:none;display:flex;
-    align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:15px;
-  }
-  .badge.L{background:var(--L);} .badge.R{background:var(--R);} .badge.B{background:var(--B);}
-  .badge.BTL{background:var(--BT);}
-  .item .info{flex:1;min-width:0;}
-  .item .time{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;}
-  .item .meta{font-size:12px;color:var(--sub);margin-top:2px;}
-  .item .gap{font-size:12px;color:var(--accent);margin-top:3px;font-variant-numeric:tabular-nums;}
-  .item .gap.first{color:var(--sub);}
-  .item .dur{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;}
-  .empty{text-align:center;color:var(--sub);padding:40px 0;font-size:14px;}
-  /* footer */
-  .foot{display:flex;gap:12px;margin-top:26px;justify-content:center;}
-  .foot button{
-    border:none;background:transparent;color:var(--sub);font-size:13px;
-    padding:8px 12px;cursor:pointer;text-decoration:underline;
-  }
-  .sync label{display:block;font-size:13px;color:var(--sub);margin:12px 0 4px;}
-  .sync input{width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--text);font-size:14px;}
-  .sync .hint{font-size:12px;color:var(--sub);line-height:1.6;margin:6px 0 2px;}
-  .sync-btns{display:flex;gap:10px;margin-top:14px;}
-  .sync-btns button{flex:1;border:none;border-radius:10px;padding:11px;font-size:14px;cursor:pointer;}
-  .sync-btns #wdSave{background:var(--accent);color:#fff;}
-  .sync-btns #wdNow{background:var(--card);color:var(--text);border:1px solid var(--line);}
-  .wd-status{margin-top:12px;font-size:13px;padding:8px 10px;border-radius:8px;}
-  .wd-status.none{color:var(--sub);}
-  .wd-status.ok{color:#0a8a3f;background:rgba(10,138,63,.1);}
-  .wd-status.syncing{color:#9a6b00;background:rgba(154,107,0,.1);}
-  .wd-status.error{color:#c0392b;background:rgba(192,57,43,.1);}
-  /* modal */
-  .overlay{
-    position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;
-    align-items:center;justify-content:center;padding:20px;z-index:50;
-  }
-  .overlay.show{display:flex;}
-  .modal{background:var(--card);border-radius:20px;padding:22px;width:100%;max-width:380px;box-shadow:var(--shadow);max-height:86vh;overflow-y:auto;}
-  .modal h3{margin:0 0 14px;font-size:18px;}
-  .modal p{margin:0 0 16px;font-size:14px;color:var(--sub);line-height:1.5;}
-  .field{margin-bottom:14px;}
-  .field label{display:block;font-size:13px;color:var(--sub);margin-bottom:6px;}
-  .field input,.field select,.tfield{
-    width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;
-    font-size:17px;background:var(--bg);color:var(--ink);
-    font-family:inherit;text-align:center;font-variant-numeric:tabular-nums;
-  }
-  .tfield{cursor:pointer;}
-  .seg{display:flex;gap:8px;}
-  .seg button{flex:1;padding:11px 0;border:1px solid var(--line);background:var(--bg);
-    border-radius:12px;font-size:15px;font-weight:700;color:var(--ink);cursor:pointer;}
-  .seg button.on{background:var(--accent);color:#fff;border-color:var(--accent);}
-  .mrow{display:flex;gap:10px;}
-  .mrow .field{flex:1;}
-  .detail-row{display:flex;justify-content:space-between;padding:9px 2px;border-bottom:1px solid var(--line);font-size:15px;}
-  .detail-row:last-child{border-bottom:none;}
-  .detail-row .k{color:var(--sub);}
-  .detail-row .v{font-weight:700;font-variant-numeric:tabular-nums;}
-  .modal .acts{display:flex;gap:10px;margin-top:14px;}
-  .modal .acts button{flex:1;padding:13px 0;border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;}
-  .btn-ok{background:var(--accent);color:#fff;}
-  .btn-cancel{background:var(--line);color:var(--ink);}
-  .btn-danger{background:#ff5a5a;color:#fff;}
-  /* wheel picker */
-  .wheels{display:flex;align-items:center;justify-content:center;gap:8px;margin:6px 0 4px;position:relative;}
-  .wheel{height:200px;width:78px;overflow-y:auto;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch;position:relative;}
-  .wheel::-webkit-scrollbar{display:none;}
-  .witem{height:40px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;scroll-snap-align:center;color:var(--sub);}
-  .witem.on{color:var(--accent-d);font-size:28px;font-weight:800;}
-  .wpad{height:80px;}
-  .wcolon{font-size:26px;font-weight:800;color:var(--ink);}
-  .wsel{position:absolute;top:50%;left:8px;right:8px;height:40px;transform:translateY(-50%);
-    border-top:1px solid var(--line);border-bottom:1px solid var(--line);pointer-events:none;border-radius:8px;background:var(--accent-soft);}
-  /* toast */
-  #toast{
-    position:fixed;left:50%;bottom:40px;transform:translateX(-50%) translateY(20px);
-    background:rgba(40,30,30,.92);color:#fff;padding:12px 20px;border-radius:14px;
-    font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:99;max-width:80%;text-align:center;
-  }
-  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-  /* hidden native date input for day picking */
-  #dayPicker{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px;}
-  /* 页面切换 + 底部导航 */
-  .page{min-height:60vh;}
-  .tabbar{position:fixed;left:0;right:0;bottom:0;max-width:520px;margin:0 auto;display:flex;
-    background:var(--card);box-shadow:0 -4px 16px rgba(0,0,0,.10);border-top:1px solid var(--line);z-index:40;}
-  .tabbar button{flex:1;border:none;background:transparent;color:var(--sub);padding:10px 0 12px;
-    font-size:12px;font-weight:600;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;}
-  .tabbar button .ic{font-size:21px;}
-  .tabbar button.on{color:var(--accent);}
-  /* 喂养页跳转卡片 */
-  .growjump{display:flex;align-items:center;justify-content:space-between;background:var(--card);
-    border-radius:var(--radius);padding:16px;margin:16px 0;box-shadow:var(--shadow);}
-  .gj-left{display:flex;align-items:center;gap:12px;}
-  .gj-ic{font-size:26px;}
-  .gj-t{font-size:16px;font-weight:700;color:var(--ink);}
-  .gj-s{font-size:12px;color:var(--sub);margin-top:2px;}
-  /* 成长页卡片 */
-  .card{background:var(--card);border-radius:var(--radius);padding:18px 16px;margin:16px 0;box-shadow:var(--shadow);}
-  .card h2{font-size:16px;margin:0 0 12px;}
-  .grow-summary{font-size:14px;color:var(--accent);font-weight:700;margin-bottom:12px;min-height:18px;}
-  .chartwrap{position:relative;width:100%;}
-  #growthChartW, #growthChartH{width:100%;display:block;}
-  .legend{display:flex;gap:18px;justify-content:center;margin-top:10px;font-size:13px;}
-  .lg-w{color:var(--accent);} .lg-h{color:var(--L);}
-  .btn-ok.full{width:100%;}
-  /* 成长页：添加记录按钮更大更圆润 */
-  #gAdd{font-size:17px;font-weight:800;padding:16px;margin-top:6px;border-radius:18px;letter-spacing:1px;}
-  /* 成长记录翻页 */
-  .pager{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:14px;}
-  .pager button{border:none;background:var(--line);color:var(--ink);border-radius:12px;
-    padding:9px 18px;font-size:14px;font-weight:600;cursor:pointer;}
-  .pager button:disabled{opacity:.4;cursor:default;}
-  .pager .pginfo{font-size:13px;color:var(--sub);min-width:54px;text-align:center;}
-  .gitem{background:var(--card);border-radius:16px;padding:13px 14px;margin-bottom:10px;
-    display:flex;align-items:center;gap:12px;box-shadow:var(--shadow);}
-  .gitem .info{flex:1;min-width:0;}
-  .gitem .date{font-size:15px;font-weight:700;}
-  .gitem .vals{font-size:13px;color:var(--sub);margin-top:2px;}
-  .gitem .acts{display:flex;gap:8px;}
-  .gitem .acts button{border:none;background:var(--line);color:var(--ink);border-radius:10px;
-    padding:8px 12px;font-size:13px;font-weight:600;cursor:pointer;}
-  .gitem .acts .del{background:#ff5a5a;color:#fff;}
-
-  /* 宝宝信息卡（展示 + 头像） */
-  .baby-head{display:flex;align-items:center;gap:14px;}
-  .baby-avatar{width:62px;height:62px;border-radius:50%;flex:0 0 62px;overflow:hidden;
-    background:var(--line);display:flex;align-items:center;justify-content:center;
-    border:1px solid var(--line);cursor:pointer;position:relative;}
-  .baby-avatar img{width:100%;height:100%;object-fit:cover;display:block;}
-  .baby-avatar .ph{font-size:32px;line-height:1;}
-  .baby-main{flex:1;min-width:0;}
-  .baby-name{font-size:18px;font-weight:800;color:var(--ink);
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .baby-meta{font-size:13px;color:var(--sub);margin-top:3px;
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .baby-edit{margin-left:auto;}
-  /* 弹窗内头像编辑 */
-  .avatar-pick{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:14px;}
-  .avatar-pick .av{width:84px;height:84px;border-radius:50%;overflow:hidden;background:var(--line);
-    display:flex;align-items:center;justify-content:center;border:1px solid var(--line);}
-  .avatar-pick .av img{width:100%;height:100%;object-fit:cover;display:block;}
-  .avatar-pick .av .ph{font-size:42px;}
-  .avatar-upload{border:1px dashed var(--line);color:var(--sub);background:transparent;
-    border-radius:12px;padding:8px 14px;font-size:13px;cursor:pointer;}
-  .avatar-upload:hover{color:var(--accent);border-color:var(--accent);}
-
-  /* 喂养页：时间卡上方的宝宝信息（只读，单行展示） */
-  #feedBabyCard{display:flex;align-items:center;gap:10px;padding:9px 12px;margin:10px 0;}
-  #feedBabyCard .baby-head{gap:10px;padding:0;flex:1;min-width:0;}
-  #feedBabyCard .baby-avatar{width:38px;height:38px;flex:0 0 38px;font-size:20px;cursor:default;}
-  #feedBabyCard .baby-avatar .ph{font-size:20px;}
-  #feedBabyCard .baby-name{font-size:15px;font-weight:700;}
-  #feedBabyCard .baby-meta{font-size:12px;margin-top:1px;}
-  /* 成长页：添加记录卡片更紧凑 */
-  .card.compact{padding:12px 14px;margin:12px 0;}
-  .card.compact h2{margin:0 0 8px;font-size:15px;}
-  .card.compact .field{margin-bottom:10px;}
-
-</style>
+<link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 <div class="wrap">
@@ -397,20 +150,82 @@
       </div>
     </header>
 
-    <section class="card compact">
-      <h2>添加接种记录</h2>
+    <section class="card next-card">
+      <div class="next-head">
+        <h2>下次接种</h2>
+        <span class="next-tip">基于预约时间</span>
+      </div>
+      <div id="vacNext"></div>
+    </section>
+
+    <section class="card compact appt-card">
+      <h2>疫苗预约</h2>
       <div class="mrow">
-        <div class="field" style="flex:1"><label>疫苗名称</label><input type="text" id="vName" autocomplete="off" placeholder="如 乙肝疫苗"></div>
+        <div class="field" style="flex:1">
+          <label>疫苗（从方案选择）</label>
+          <select id="aPick"></select>
+        </div>
+      </div>
+      <div class="mrow">
+        <div class="field" style="flex:1"><label>预约时间</label><button type="button" class="timebtn" id="aDateTimeBtn">请选择</button></div>
+      </div>
+      <div class="mrow">
+        <div class="field" style="flex:1">
+          <label>接种机构</label>
+          <select id="aOrg"></select>
+        </div>
+      </div>
+      <button class="btn-ok full" id="aAdd">添加预约</button>
+      <div id="apptList" class="appt-list"></div>
+    </section>
+
+    <section class="card compact sched-card">
+      <div class="sched-head" id="schedHead">
+        <h2>免疫方案时间表 <span class="cnt" id="schedCnt"></span></h2>
+        <button class="linkbtn" id="schedToggle">展开 ▾</button>
+      </div>
+      <div id="vacSched" class="sched-body" style="display:none"></div>
+    </section>
+
+    <section class="card compact">
+      <div class="sched-head" style="margin-bottom:10px">
+        <h2>添加接种记录</h2>
+        <button class="linkbtn" id="vOrgManageBtn" type="button">管理机构</button>
+      </div>
+      <div class="mrow">
+        <div class="field" style="flex:1">
+          <label>从方案速选（可选）</label>
+          <select id="vPick"></select>
+        </div>
       </div>
       <div class="mrow">
         <div class="field"><label>接种日期</label><input type="date" id="vDate"></div>
-        <div class="field"><label>剂次</label><input type="text" id="vDose" autocomplete="off" placeholder="如 第1剂"></div>
+        <div class="field">
+          <label>接种部位</label>
+          <select id="vSite">
+            <option value="">— 请选择 —</option>
+            <option>左上臂</option>
+            <option>右上臂</option>
+            <option>左大腿</option>
+            <option>右大腿</option>
+            <option>口服</option>
+          </select>
+        </div>
       </div>
       <div class="mrow">
-        <div class="field" style="flex:1"><label>接种部位 / 机构</label><input type="text" id="vSite" autocomplete="off" placeholder="如 左上臂 / 社区卫生服务中心"></div>
-      </div>
-      <div class="mrow">
-        <div class="field" style="flex:1"><label>备注</label><input type="text" id="vNote" autocomplete="off" placeholder="厂家、批号、反应等"></div>
+        <div class="field" style="flex:1">
+          <label>接种机构</label>
+          <select id="vOrg"></select>
+        </div>
+        <div class="field">
+          <label>备注</label>
+          <select id="vNote">
+            <option value="">— 请选择 —</option>
+            <option>自费</option>
+            <option>免费</option>
+            <option>不接种</option>
+          </select>
+        </div>
       </div>
       <button class="btn-ok full" id="vAdd">添加记录</button>
     </section>
@@ -552,6 +367,27 @@
   </div>
 </div>
 
+<!-- 预约日期时间选择器：日期原生日历 + 时分线性滚轮（不循环） -->
+<div class="overlay" id="apptPickerOverlay">
+  <div class="modal">
+    <h3>选择预约时间</h3>
+    <div class="field" style="margin-bottom:14px">
+      <label>日期</label>
+      <input type="date" id="apDate">
+    </div>
+    <div class="wheels">
+      <div class="wsel"></div>
+      <div class="wheel" id="awH"><div class="wpad"></div></div>
+      <div class="wcolon">:</div>
+      <div class="wheel" id="awM"><div class="wpad"></div></div>
+    </div>
+    <div class="acts">
+      <button class="btn-cancel" id="apCancel">取消</button>
+      <button class="btn-ok" id="apOk">确定</button>
+    </div>
+  </div>
+</div>
+
 <!-- 疫苗接种：修改弹窗 -->
 <div class="overlay" id="vacEditOverlay">
   <div class="modal">
@@ -562,15 +398,32 @@
     </div>
     <div class="mrow">
       <div class="field"><label>接种日期</label><input type="date" id="veDate"></div>
-      <div class="field"><label>剂次</label><input type="text" id="veDose" autocomplete="off"></div>
+      <div class="field">
+        <label>接种部位</label>
+        <select id="veSite">
+          <option value="">— 请选择 —</option>
+          <option>左上臂</option>
+          <option>右上臂</option>
+          <option>左大腿</option>
+          <option>右大腿</option>
+          <option>口服</option>
+        </select>
+      </div>
     </div>
-    <div class="field">
-      <label>接种部位 / 机构</label>
-      <input type="text" id="veSite" autocomplete="off">
-    </div>
-    <div class="field">
-      <label>备注</label>
-      <input type="text" id="veNote" autocomplete="off">
+    <div class="mrow">
+      <div class="field" style="flex:1">
+          <label>接种机构</label>
+          <select id="veOrg"></select>
+      </div>
+      <div class="field">
+        <label>备注</label>
+        <select id="veNote">
+          <option value="">— 请选择 —</option>
+          <option>自费</option>
+          <option>免费</option>
+          <option>不接种</option>
+        </select>
+      </div>
     </div>
     <div class="acts">
       <button class="btn-cancel" id="veCancel">取消</button>
@@ -665,1215 +518,29 @@
   </div>
 </div>
 
+<!-- 机构管理弹窗（增删改接种机构） -->
+<div class="overlay" id="orgManageOverlay">
+  <div class="modal">
+    <h3>管理接种机构</h3>
+    <div id="orgManageList" class="org-manage-list"></div>
+    <div class="mrow" style="margin-top:6px">
+      <button type="button" class="btn-cancel" id="orgManageClose" style="flex:1">关闭</button>
+      <button type="button" class="btn-ok" id="orgManageAdd" style="flex:1">＋ 添加机构</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
-<script>
-const KEY = 'bf_sessions_v1';
-const SIDE_NAME = {L:'左', R:'右', B:'双侧'};
-let sessions = load();
-// 喂养方式默认为「双侧」
-function computeDefaultSide(){
-  return 'B';
-}
-let selectedSide = computeDefaultSide();
-let tick = null;
-let viewDate = startOfDay(Date.now());
-let editId = null;
 
-function load(){ try{ return JSON.parse(localStorage.getItem(KEY)) || []; }catch(e){ return []; } }
-let inSync = false;
-function save(){ try{ localStorage.setItem(KEY, JSON.stringify(sessions)); }catch(e){ console.warn('save failed', e); } if(!inSync) scheduleSync(); }
-function getActive(){ return sessions.find(s => s.end === null && !s._deleted) || null; }
-function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
-function buzz(ms){ try{ navigator.vibrate && navigator.vibrate(ms); }catch(e){} }
+  <script src="js/util.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/feed.js"></script>
+  <script src="js/growth.js"></script>
+  <script src="js/vaccine.js"></script>
+  <script src="js/sync.js"></script>
+  <script src="js/io.js"></script>
+  <script src="js/app.js"></script>
 
-function startOfDay(ts){ const d = new Date(ts); d.setHours(0,0,0,0); return d.getTime(); }
-function isSameDay(a,b){ return startOfDay(a) === startOfDay(b); }
-
-function pad(n){ return n<10 ? '0'+n : ''+n; }
-function fmtHMS(ms){
-  let s = Math.max(0, Math.floor(ms/1000));
-  const h = Math.floor(s/3600); s -= h*3600;
-  const m = Math.floor(s/60); s -= m*60;
-  return pad(h)+':'+pad(m)+':'+pad(s);
-}
-// 时长显示为「时分」 H:MM
-function fmtHM(ms){
-  const m = Math.max(0, Math.round(ms/60000));
-  return Math.floor(m/60) + ':' + pad(m%60);
-}
-// 时长显示为「分秒」带单位，如 10分15秒；超过1小时则加「时」
-function fmtMinSec(ms){
-  let s = Math.max(0, Math.round(ms/1000));
-  const h = Math.floor(s/3600); s -= h*3600;
-  const m = Math.floor(s/60); s -= m*60;
-  if(h>0) return h+'时'+m+'分'+s+'秒';
-  return m+'分'+s+'秒';
-}
-/* 间隔显示：距上一次喂养的时长（天/小时/分钟，不带秒） */
-function fmtGap(ms){
-  if(ms < 60000) return '不到1分钟';
-  const totalMin = Math.round(ms/60000);
-  const days = Math.floor(totalMin/1440);
-  const hours = Math.floor((totalMin%1440)/60);
-  const mins = totalMin%60;
-  if(days>0) return days+'天'+(hours>0?hours+'小时':'')+(mins>0&&hours===0?mins+'分钟':'');
-  if(hours>0) return hours+'小时'+(mins>0?mins+'分钟':'');
-  return mins+'分钟';
-}
-function fmtClock(ts){
-  const d = new Date(ts);
-  return pad(d.getHours())+':'+pad(d.getMinutes());
-}
-function fmtDate(ts){
-  const d = new Date(ts);
-  return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
-}
-function fmtDateCn(ts){
-  const d = new Date(ts);
-  const wk = ['日','一','二','三','四','五','六'][d.getDay()];
-  return (d.getMonth()+1)+'月'+d.getDate()+'日 周'+wk;
-}
-function fmtRelative(ts){
-  const diff = Date.now() - ts;
-  if(diff < 60000) return '刚刚';
-  if(diff < 3600000) return Math.floor(diff/60000)+'分钟前';
-  if(diff < 86400000) return Math.floor(diff/3600000)+'小时前';
-  return Math.floor(diff/86400000)+'天前';
-}
-function netDuration(s){
-  const end = s.end != null ? s.end : Date.now();
-  let paused = s.pausedTotal || 0;
-  if(s.end == null && s.pausedAt) paused += Date.now() - s.pausedAt;
-  return Math.max(0, end - s.start - paused);
-}
-function liveElapsed(s){
-  let paused = s.pausedTotal || 0;
-  if(s.pausedAt) paused += Date.now() - s.pausedAt;
-  return Math.max(0, Date.now() - s.start - paused);
-}
-
-/* ---------- 轻提示 / 确认弹窗 ---------- */
-let toastTimer = null;
-function toast(msg){
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(()=>t.classList.remove('show'), 2200);
-}
-function confirmDialog(msg, onOk, title){
-  document.getElementById('cfMsg').textContent = msg;
-  document.getElementById('cfTitle').textContent = title || '确认';
-  const ov = document.getElementById('confirmOverlay');
-  ov.classList.add('show');
-  const ok = document.getElementById('cfOk');
-  const cancel = document.getElementById('cfCancel');
-  ok.onclick = ()=>{ ov.classList.remove('show'); onOk(); };
-  cancel.onclick = ()=>{ ov.classList.remove('show'); };
-}
-/* HTML 转义，避免用户输入（疫苗名称/备注）造成 XSS */
-function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-
-/* ---------- 滚轮时间选择器 ---------- */
-let pickerApply = null;
-function buildWheel(wheel, max){
-  let html = '';
-  for(let i=0;i<=max;i++) html += '<div class="witem" data-v="'+i+'">'+pad(i)+'</div>';
-  wheel.innerHTML = '<div class="wpad"></div>'+html+'<div class="wpad"></div>';
-  wheel.onscroll = ()=> markWheel(wheel, max);
-}
-function markWheel(wheel, max){
-  const idx = Math.min(max, Math.max(0, Math.round(wheel.scrollTop/40)));
-  wheel.querySelectorAll('.witem').forEach(el=>{
-    el.classList.toggle('on', parseInt(el.dataset.v,10)===idx);
-  });
-}
-function wheelVal(wheel, max){ return Math.min(max, Math.max(0, Math.round(wheel.scrollTop/40))); }
-function setWheel(wheel, val){ wheel.scrollTop = val*40; }
-function openPicker(initH, initM, apply){
-  pickerApply = apply;
-  const wh = document.getElementById('wheelH'), wm = document.getElementById('wheelM');
-  document.getElementById('pickerOverlay').classList.add('show');
-  // 弹窗显示后（有布局）再定位滚轮，保证高亮与选中带精确对齐
-  requestAnimationFrame(()=>{
-    setWheel(wh, initH); setWheel(wm, initM);
-    markWheel(wh, 23); markWheel(wm, 59);
-  });
-}
-buildWheel(document.getElementById('wheelH'), 23);
-buildWheel(document.getElementById('wheelM'), 59);
-document.getElementById('pCancel').addEventListener('click', ()=>document.getElementById('pickerOverlay').classList.remove('show'));
-document.getElementById('pOk').addEventListener('click', ()=>{
-  const h = wheelVal(document.getElementById('wheelH'),23);
-  const m = wheelVal(document.getElementById('wheelM'),59);
-  document.getElementById('pickerOverlay').classList.remove('show');
-  if(pickerApply) pickerApply(h, m);
-});
-
-/* ---------- 渲染 ---------- */
-function render(){
-  renderTimer();
-  renderStats();
-  renderHistory();
-}
-/* 每秒刷新计时卡片：喂养中显示本次时长；空闲且有记录时显示距上次喂养的时长 */
-function tickUpdate(){
-  const clock = document.getElementById('clock');
-  const active = getActive();
-  if(active){
-    clock.textContent = fmtHMS(liveElapsed(active));
-  } else {
-    const done = sessions.filter(s=>s.end!==null && !s._deleted);
-    if(done.length){
-      const lastS = done[done.length-1];
-      clock.textContent = fmtHMS(Date.now() - lastS.end);
-    }
-  }
-}
-function renderTimer(){
-  const active = getActive();
-  const label = document.getElementById('timerLabel');
-  const clock = document.getElementById('clock');
-  const last = document.getElementById('lastLine');
-  const mainBtn = document.getElementById('mainBtn');
-  const activeBtns = document.getElementById('activeBtns');
-  const pauseBtn = document.getElementById('pauseBtn');
-  const sides = document.getElementById('sides').children;
-  const done = sessions.filter(s=>s.end!==null && !s._deleted);
-
-  if(!active){
-    label.textContent = '准备开始';
-    clock.textContent = '00:00:00';
-    mainBtn.style.display = '';
-    activeBtns.style.display = 'none';
-    for(const el of sides){
-      el.classList.toggle('on', el.dataset.side === selectedSide);
-      el.style.pointerEvents = ''; el.style.opacity = '';
-    }
-    if(done.length){
-      const lastS = done[done.length-1];
-      label.textContent = '距上次喂养';
-      clock.textContent = fmtHMS(Date.now() - lastS.end);
-      last.textContent = '上次结束：' + fmtClock(lastS.end) + ' · 时长 ' + fmtMinSec(netDuration(lastS));
-    } else {
-      last.textContent = '还没有记录，开始第一次吧';
-    }
-  } else {
-    mainBtn.style.display = 'none';
-    activeBtns.style.display = 'flex';
-    for(const el of sides){ el.classList.remove('on'); el.style.pointerEvents='none'; el.style.opacity='.5'; }
-
-    if(active.pausedAt){
-      label.textContent = '已暂停 · ' + SIDE_NAME[active.side];
-      clock.textContent = fmtHMS(liveElapsed(active));
-      pauseBtn.textContent = '继续';
-      last.textContent = '暂停于 ' + fmtClock(active.pausedAt);
-    } else {
-      label.textContent = '喂养中 · ' + SIDE_NAME[active.side];
-      clock.textContent = fmtHMS(liveElapsed(active));
-      pauseBtn.textContent = '暂停';
-      last.textContent = '开始于 ' + fmtClock(active.start);
-    }
-  }
-
-  // 喂养中 或 空闲但已有记录（需实时显示距上次喂养）时保持每秒刷新
-  const needTick = !!active || done.length > 0;
-  if(needTick){ if(!tick) tick = setInterval(tickUpdate, 1000); }
-  else { if(tick){ clearInterval(tick); tick = null; } }
-}
-function renderStats(){
-  const done = sessions.filter(s=>s.end!==null && !s._deleted);
-  const today = done.filter(s=>isSameDay(s.end,Date.now()));
-  const yes = done.filter(s=>isSameDay(s.end,Date.now()-86400000));
-  document.getElementById('stTodayN').textContent = today.length;
-  document.getElementById('stYesN').textContent = yes.length;
-  document.getElementById('stAllN').textContent = done.length;
-}
-function renderHistory(){
-  const list = document.getElementById('histList');
-  const today0 = startOfDay(Date.now());
-  let dl;
-  if(viewDate === today0) dl = '今天';
-  else if(viewDate === today0 - 86400000) dl = '昨天';
-  else dl = fmtDateCn(viewDate);
-  document.getElementById('dayLabel').textContent = dl;
-  document.getElementById('prevDay').disabled = false;
-  document.getElementById('nextDay').disabled = (viewDate >= today0);
-  document.getElementById('todayBtn').style.display = (viewDate === today0) ? 'none' : '';
-
-  const daySessions = sessions
-    .filter(s => isSameDay(s.start, viewDate) && !s._deleted)
-    .sort((a,b)=> b.start - a.start);
-
-  /* 计算每条记录距上一次喂养的间隔：基于全部记录按开始时间升序，跨天也计入 */
-  const gapMap = {};
-  const allSorted = sessions.filter(s=> s.start != null && !s._deleted).sort((a,b)=> a.start - b.start);
-  for(let i=1;i<allSorted.length;i++){
-    const prev = allSorted[i-1];
-    const pEnd = (prev.end != null) ? prev.end : prev.start;
-    gapMap[allSorted[i].id] = allSorted[i].start - pEnd;
-  }
-
-  document.getElementById('histCnt').textContent = daySessions.length ? ('共 '+daySessions.length+' 次') : '';
-  if(!daySessions.length){
-    list.innerHTML = '<div class="empty">这一天还没有记录<br>点击下方按钮开始喂养 🤱</div>';
-    return;
-  }
-  let html = '';
-  for(const s of daySessions){
-    const isBottle = s.type === 'bottle';
-    const active = s.end === null;
-    let badge, timeStr, meta, durStr;
-    if(isBottle){
-      badge = '<div class="badge BTL">瓶</div>';
-      timeStr = fmtClock(s.start);
-      meta = '瓶喂 · ' + s.volume + 'ml';
-      durStr = s.volume + 'ml';
-    } else {
-      badge = '<div class="badge '+s.side+'">'+s.side+'</div>';
-      const sameDay = isSameDay(s.start, s.end == null ? Date.now() : s.end);
-      timeStr = sameDay ? (fmtClock(s.start)+' – '+(active ? '进行中' : fmtClock(s.end)))
-                         : (fmtClock(s.start)+' 起');
-      const paused = (s.pausedTotal||0) + (s.pausedAt ? (Date.now()-s.pausedAt) : 0);
-      meta = SIDE_NAME[s.side] + (paused>60000 ? ' · 含暂停'+fmtMinSec(paused) : '');
-      durStr = active ? fmtMinSec(liveElapsed(s)) : fmtMinSec(netDuration(s));
-    }
-    let gapHtml;
-    if(Object.prototype.hasOwnProperty.call(gapMap, s.id)){
-      gapHtml = '<div class="gap">距上次 '+fmtGap(gapMap[s.id])+'</div>';
-    } else {
-      gapHtml = '<div class="gap first">首次记录</div>';
-    }
-    html += '<div class="item" data-id="'+s.id+'">'
-      + badge
-      + '<div class="info"><div class="time">'+timeStr+'</div>'
-      + '<div class="meta">'+meta+'</div>'+gapHtml+'</div>'
-      + '<div class="dur">'+durStr+'</div>'
-      + '</div>';
-  }
-  list.innerHTML = html;
-}
-
-/* ---------- 计时交互 ---------- */
-document.getElementById('sides').addEventListener('click', e=>{
-  const el = e.target.closest('.side'); if(!el || getActive()) return;
-  selectedSide = el.dataset.side; buzz(15); renderTimer();
-});
-document.getElementById('mainBtn').addEventListener('click', ()=>{
-  if(getActive()) return;
-  sessions.push({id:uid(), type:'nurse', start:Date.now(), end:null, side:selectedSide, pausedTotal:0, pausedAt:null, updatedAt:Date.now()});
-  buzz(30); save(); render();
-});
-document.getElementById('pauseBtn').addEventListener('click', ()=>{
-  const active = getActive(); if(!active) return;
-  if(active.pausedAt){
-    active.pausedTotal = (active.pausedTotal||0) + (Date.now() - active.pausedAt);
-    active.pausedAt = null; buzz(20);
-  } else {
-    active.pausedAt = Date.now(); buzz(20);
-  }
-  active.updatedAt = Date.now();
-  save(); render();
-});
-document.getElementById('endBtn').addEventListener('click', ()=>{
-  const active = getActive(); if(!active) return;
-  if(active.pausedAt){
-    active.pausedTotal = (active.pausedTotal||0) + (Date.now() - active.pausedAt);
-    active.pausedAt = null;
-  }
-  active.end = Date.now();
-  active.updatedAt = Date.now();
-  selectedSide = computeDefaultSide();
-  buzz([20,40,20]); save(); render();
-});
-
-/* ---------- 时间字段绑定（点击唤起滚轮） ---------- */
-// 每个时间字段维护一个 "HH:MM" 值，显示在 .tfield 上
-const timeFields = {};
-function bindTimeField(id, initH, initM){
-  const el = document.getElementById(id);
-  timeFields[id] = {h:initH, m:initM};
-  el.textContent = pad(initH)+':'+pad(initM);
-  el.addEventListener('click', ()=>{
-    openPicker(timeFields[id].h, timeFields[id].m, (h,m)=>{
-      timeFields[id].h = h; timeFields[id].m = m;
-      el.textContent = pad(h)+':'+pad(m);
-    });
-  });
-}
-bindTimeField('mStartD', 9, 0);
-bindTimeField('mEndD', 9, 15);
-bindTimeField('bTimeD', 9, 0);
-bindTimeField('eStartD', 9, 0);
-bindTimeField('eEndD', 9, 15);
-
-/* ---------- 补记（喂养） ---------- */
-let mSide = 'L';
-const overlay = document.getElementById('overlay');
-function openModal(){
-  const now = new Date();
-  document.getElementById('mDate').value = fmtDate(now.getTime());
-  timeFields['mStartD'].h = now.getHours(); timeFields['mStartD'].m = now.getMinutes();
-  document.getElementById('mStartD').textContent = pad(now.getHours())+':'+pad(now.getMinutes());
-  const end = new Date(now.getTime()+15*60000);
-  timeFields['mEndD'].h = end.getHours(); timeFields['mEndD'].m = end.getMinutes();
-  document.getElementById('mEndD').textContent = pad(end.getHours())+':'+pad(end.getMinutes());
-  mSide = 'L';
-  document.querySelectorAll('#mSeg button').forEach(b=>b.classList.toggle('on', b.dataset.side==='L'));
-  overlay.classList.add('show');
-}
-function closeModal(){ overlay.classList.remove('show'); }
-document.getElementById('addBtn').addEventListener('click', openModal);
-document.getElementById('mCancel').addEventListener('click', closeModal);
-overlay.addEventListener('click', e=>{ if(e.target===overlay) closeModal(); });
-document.querySelectorAll('#mSeg button').forEach(b=>{
-  b.onclick = ()=>{ mSide=b.dataset.side; document.querySelectorAll('#mSeg button').forEach(x=>x.classList.toggle('on', x===b)); };
-});
-document.getElementById('mSave').addEventListener('click', ()=>{
-  const date = document.getElementById('mDate').value;
-  const sh = timeFields['mStartD'].h, sm = timeFields['mStartD'].m;
-  const eh = timeFields['mEndD'].h, em = timeFields['mEndD'].m;
-  if(!date){ toast('请选择日期'); return; }
-  const start = new Date(date+'T'+pad(sh)+':'+pad(sm)+':00').getTime();
-  const end = new Date(date+'T'+pad(eh)+':'+pad(em)+':00').getTime();
-  if(isNaN(start)||isNaN(end)){ toast('时间格式有误'); return; }
-  if(end <= start){ toast('结束时间需晚于开始时间'); return; }
-  if(end > Date.now()+60000){ toast('结束时间不能晚于现在'); return; }
-  sessions.push({id:uid(), type:'nurse', start, end, side:mSide, pausedTotal:0, pausedAt:null, updatedAt:Date.now()});
-  save(); render(); closeModal();
-});
-
-/* ---------- 瓶喂 ---------- */
-const bottleOverlay = document.getElementById('bottleOverlay');
-function openBottle(){
-  const now = new Date();
-  document.getElementById('bDate').value = fmtDate(now.getTime());
-  timeFields['bTimeD'].h = now.getHours(); timeFields['bTimeD'].m = now.getMinutes();
-  document.getElementById('bTimeD').textContent = pad(now.getHours())+':'+pad(now.getMinutes());
-  document.getElementById('bVol').value = 120;
-  bottleOverlay.classList.add('show');
-}
-function closeBottle(){ bottleOverlay.classList.remove('show'); }
-document.getElementById('bottleBtn').addEventListener('click', openBottle);
-document.getElementById('bCancel').addEventListener('click', closeBottle);
-bottleOverlay.addEventListener('click', e=>{ if(e.target===bottleOverlay) closeBottle(); });
-document.getElementById('bSave').addEventListener('click', ()=>{
-  const date = document.getElementById('bDate').value;
-  const h = timeFields['bTimeD'].h, m = timeFields['bTimeD'].m;
-  const vol = parseInt(document.getElementById('bVol').value,10);
-  if(!date){ toast('请选择日期'); return; }
-  if(!vol || vol<1){ toast('请填写容量'); return; }
-  const start = new Date(date+'T'+pad(h)+':'+pad(m)+':00').getTime();
-  if(isNaN(start)){ toast('时间格式有误'); return; }
-  if(start > Date.now()+60000){ toast('喂养时间不能晚于现在'); return; }
-  sessions.push({id:uid(), type:'bottle', start, end:start, volume:vol, pausedTotal:0, pausedAt:null, updatedAt:Date.now()});
-  save(); render(); closeBottle();
-});
-
-/* ---------- 详情 / 修改 / 删除 ---------- */
-const detailOverlay = document.getElementById('detailOverlay');
-const editOverlay = document.getElementById('editOverlay');
-function openDetail(id){
-  const s = sessions.find(x=>x.id===id); if(!s) return;
-  const isBottle = s.type === 'bottle';
-  const active = s.end === null;
-  const paused = (s.pausedTotal||0) + (s.pausedAt ? (Date.now()-s.pausedAt) : 0);
-  let rows = '';
-  rows += '<div class="detail-row"><span class="k">日期</span><span class="v">'+fmtDateCn(s.start)+'</span></div>';
-  if(isBottle){
-    rows += '<div class="detail-row"><span class="k">时间</span><span class="v">'+fmtClock(s.start)+'</span></div>';
-    rows += '<div class="detail-row"><span class="k">容量</span><span class="v">'+s.volume+' ml</span></div>';
-    rows += '<div class="detail-row"><span class="k">类型</span><span class="v">瓶喂</span></div>';
-  } else if(active){
-    rows += '<div class="detail-row"><span class="k">开始</span><span class="v">'+fmtClock(s.start)+'</span></div>';
-    rows += '<div class="detail-row"><span class="k">状态</span><span class="v">进行中</span></div>';
-    rows += '<div class="detail-row"><span class="k">已用</span><span class="v">'+fmtHMS(liveElapsed(s))+'</span></div>';
-  } else {
-    rows += '<div class="detail-row"><span class="k">开始</span><span class="v">'+fmtClock(s.start)+'</span></div>';
-    rows += '<div class="detail-row"><span class="k">结束</span><span class="v">'+fmtClock(s.end)+'</span></div>';
-    rows += '<div class="detail-row"><span class="k">时长</span><span class="v">'+fmtMinSec(netDuration(s))+'</span></div>';
-    if(paused>60000) rows += '<div class="detail-row"><span class="k">暂停</span><span class="v">'+fmtMinSec(paused)+'</span></div>';
-    rows += '<div class="detail-row"><span class="k">乳房</span><span class="v">'+SIDE_NAME[s.side]+'</span></div>';
-  }
-  document.getElementById('detailBody').innerHTML = rows;
-  // 按钮显隐：进行中不可修改，但可删除
-  document.getElementById('dEdit').style.display = active ? 'none' : '';
-  detailOverlay.classList.add('show');
-  document.getElementById('dEdit').onclick = ()=>{ detailOverlay.classList.remove('show'); openEdit(id); };
-  document.getElementById('dDelete').onclick = ()=>{
-    detailOverlay.classList.remove('show');
-    confirmDialog('删除这条记录？删除后不可恢复。', ()=>{
-      sessions = sessions.map(x => x.id===id ? Object.assign({}, x, {_deleted:true, updatedAt:Date.now(), end: x.end==null ? Date.now() : x.end}) : x);
-      save(); render(); toast('已删除');
-    }, '删除记录');
-  };
-}
-document.getElementById('dClose').addEventListener('click', ()=>detailOverlay.classList.remove('show'));
-detailOverlay.addEventListener('click', e=>{ if(e.target===detailOverlay) detailOverlay.classList.remove('show'); });
-
-function openEdit(id){
-  const s = sessions.find(x=>x.id===id); if(!s) return;
-  editId = id;
-  const isBottle = s.type === 'bottle';
-  document.getElementById('eDate').value = fmtDate(s.start);
-  // 自动带出原开始时间
-  const sd = new Date(s.start);
-  timeFields['eStartD'].h = sd.getHours();
-  timeFields['eStartD'].m = sd.getMinutes();
-  document.getElementById('eStartD').textContent = pad(sd.getHours())+':'+pad(sd.getMinutes());
-  // 自动带出原结束时间（无结束则沿用开始）
-  const ed = new Date(s.end != null ? s.end : s.start);
-  timeFields['eEndD'].h = ed.getHours();
-  timeFields['eEndD'].m = ed.getMinutes();
-  document.getElementById('eEndD').textContent = pad(ed.getHours())+':'+pad(ed.getMinutes());
-  // 切换字段显示：瓶喂无结束时间/乳房，有容量
-  document.getElementById('eEndField').style.display = isBottle ? 'none' : '';
-  document.getElementById('eVolField').style.display = isBottle ? '' : 'none';
-  document.getElementById('eSideField').style.display = isBottle ? 'none' : '';
-  if(isBottle){
-    document.getElementById('eVol').value = s.volume;
-  } else {
-    document.querySelectorAll('#eSeg button').forEach(b=>b.classList.toggle('on', b.dataset.side===s.side));
-  }
-  editOverlay.classList.add('show');
-}
-document.getElementById('eCancel').addEventListener('click', ()=>editOverlay.classList.remove('show'));
-editOverlay.addEventListener('click', e=>{ if(e.target===editOverlay) editOverlay.classList.remove('show'); });
-document.querySelectorAll('#eSeg button').forEach(b=>{
-  b.onclick = ()=>{ document.querySelectorAll('#eSeg button').forEach(x=>x.classList.toggle('on', x===b)); };
-});
-document.getElementById('eSave').addEventListener('click', ()=>{
-  const s = sessions.find(x=>x.id===editId); if(!s) return;
-  const date = document.getElementById('eDate').value;
-  const h = timeFields['eStartD'].h, m = timeFields['eStartD'].m;
-  if(!date){ toast('请选择日期'); return; }
-  const start = new Date(date+'T'+pad(h)+':'+pad(m)+':00').getTime();
-  if(isNaN(start)){ toast('时间格式有误'); return; }
-  if(s.type === 'bottle'){
-    const vol = parseInt(document.getElementById('eVol').value,10);
-    if(!vol||vol<1){ toast('请填写容量'); return; }
-    if(start > Date.now()+60000){ toast('时间不能晚于现在'); return; }
-    s.start = start; s.end = start; s.volume = vol; s.updatedAt = Date.now();
-  } else {
-    const eh = timeFields['eEndD'].h, em = timeFields['eEndD'].m;
-    const end = new Date(date+'T'+pad(eh)+':'+pad(em)+':00').getTime();
-    if(isNaN(end)){ toast('时间格式有误'); return; }
-    if(end <= start){ toast('结束时间需晚于开始时间'); return; }
-    if(end > Date.now()+60000){ toast('结束时间不能晚于现在'); return; }
-    let side = document.querySelector('#eSeg button.on');
-    s.start = start; s.end = end; s.side = side ? side.dataset.side : s.side;
-    // 保留原有暂停信息（修改记录时不再清零）
-    s.updatedAt = Date.now();
-  }
-  save(); render(); editOverlay.classList.remove('show');
-});
-
-/* 历史列表点击：打开详情 */
-document.getElementById('histList').addEventListener('click', e=>{
-  const item = e.target.closest('.item');
-  if(item) openDetail(item.dataset.id);
-});
-
-/* 日期导航 + 选择 + 回到今天 */
-document.getElementById('prevDay').addEventListener('click', ()=>{ viewDate -= 86400000; render(); });
-document.getElementById('nextDay').addEventListener('click', ()=>{
-  const today0 = startOfDay(Date.now());
-  if(viewDate < today0){ viewDate += 86400000; render(); }
-});
-document.getElementById('todayBtn').addEventListener('click', ()=>{ viewDate = startOfDay(Date.now()); render(); });
-document.getElementById('dayLabel').addEventListener('click', ()=>{
-  const dp = document.getElementById('dayPicker');
-  dp.value = fmtDate(viewDate);
-  dp.showPicker ? dp.showPicker() : dp.click();
-});
-document.getElementById('dayPicker').addEventListener('change', e=>{
-  if(e.target.value){ viewDate = new Date(e.target.value+'T00:00').getTime(); render(); }
-});
-
-/* ---------- 确认弹窗通用按钮 ---------- */
-document.getElementById('cfCancel').addEventListener('click', ()=>document.getElementById('confirmOverlay').classList.remove('show'));
-document.getElementById('confirmOverlay').addEventListener('click', e=>{ if(e.target===e.currentTarget) e.currentTarget.classList.remove('show'); });
-
-/* PWA */
-if('serviceWorker' in navigator){
-  window.addEventListener('load', ()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
-}
-
-/* ---------- 仅明亮模式（无主题切换） ---------- */
-/* 进入页面时确保安卓原生状态栏/导航栏为浅色背景 + 深色图标 */
-(function(){
-  try{
-    const b = window.AndroidBridge;
-    if(b && typeof b.setBarColors === 'function') b.setBarColors('#fff5f3','#fff5f3', true);
-  }catch(e){}
-})();
-
-/* ---------- 页面切换（喂养 / 成长） ---------- */
-function showPage(which){
-  const map = {
-    feed: { page: document.getElementById('pageFeed'), tab: document.getElementById('tabFeed') },
-    grow: { page: document.getElementById('pageGrow'), tab: document.getElementById('tabGrow') },
-    vac:  { page: document.getElementById('pageVaccine'), tab: document.getElementById('tabVaccine') }
-  };
-  for(const k in map){
-    if(!map[k].page || !map[k].tab) continue;
-    const active = (k === which);
-    map[k].page.style.display = active ? '' : 'none';
-    map[k].tab.classList.toggle('on', active);
-  }
-  if(which === 'grow') renderGrowth();   // 进入成长页时刷新列表与曲线
-  if(which === 'vac')  renderVaccine();  // 进入疫苗页时刷新列表
-}
-document.getElementById('tabFeed').addEventListener('click', ()=>showPage('feed'));
-document.getElementById('tabGrow').addEventListener('click', ()=>showPage('grow'));
-document.getElementById('tabVaccine').addEventListener('click', ()=>showPage('vac'));
-
-/* ---------- 宝宝成长记录 ---------- */
-const KEY_INFO = 'bf_baby_info_v1';
-const KEY_GROW = 'bf_growth_v1';
-let babyInfo = loadInfo();
-let growth = loadGrowth();
-let growEditId = null;
-
-function loadInfo(){ try{ return JSON.parse(localStorage.getItem(KEY_INFO)) || null; }catch(e){ return null; } }
-function saveInfo(){ try{ localStorage.setItem(KEY_INFO, JSON.stringify(babyInfo)); }catch(e){} if(!inSync) scheduleSync(); }
-function loadGrowth(){ try{ return JSON.parse(localStorage.getItem(KEY_GROW)) || []; }catch(e){ return []; } }
-function saveGrowth(){ try{ localStorage.setItem(KEY_GROW, JSON.stringify(growth)); }catch(e){} if(!inSync) scheduleSync(); }
-
-/* ---------- 疫苗接种记录（本地保存，不纳入 WebDAV 同步） ---------- */
-const KEY_VAC = 'bf_vaccines_v1';
-let vaccines = loadVaccines();
-let vacEditId = null;
-function loadVaccines(){ try{ return JSON.parse(localStorage.getItem(KEY_VAC)) || []; }catch(e){ return []; } }
-function saveVaccines(){ try{ localStorage.setItem(KEY_VAC, JSON.stringify(vaccines)); }catch(e){ console.warn('save vaccines failed', e); } }
-
-function ageText(birthTs){
-  const days = Math.floor((Date.now() - birthTs) / 86400000);
-  if(days < 0) return '还未出生';
-  if(days < 30) return '出生 ' + days + ' 天';
-  const months = Math.floor(days / 30);
-  const rem = days % 30;
-  return months + ' 个月' + (rem ? (' ' + rem + ' 天') : '');
-}
-/* 宝宝信息：展示卡渲染（头像 / 姓名 / 月龄） */
-function applyBabyToCard(ids){
-  const img = document.getElementById(ids.img);
-  const ph = document.getElementById(ids.ph);
-  const nameEl = document.getElementById(ids.name);
-  const metaEl = document.getElementById(ids.meta);
-  if(!img) return;
-  if(babyInfo && babyInfo.avatar){
-    img.src = babyInfo.avatar; img.style.display = ''; ph.style.display = 'none';
-  } else {
-    img.removeAttribute('src'); img.style.display = 'none'; ph.style.display = '';
-  }
-  nameEl.textContent = (babyInfo && babyInfo.name) ? babyInfo.name : '宝宝';
-  if(babyInfo && (babyInfo.sex || babyInfo.birth)){
-    let s = '';
-    if(babyInfo.sex) s += (babyInfo.sex === 'M' ? '男' : '女');
-    if(babyInfo.birth){
-      const t = new Date(babyInfo.birth).getTime();
-      if(!isNaN(t)) s += (s ? ' · ' : '') + ageText(t);
-    }
-    metaEl.textContent = s || '未填写出生信息';
-  } else {
-    metaEl.textContent = '未填写信息';
-  }
-}
-function renderBabyInfo(){
-  applyBabyToCard({img:'babyAvatar', ph:'babyAvatarPh', name:'babyDispName', meta:'babyDispMeta'});
-  applyBabyToCard({img:'feedBabyAvatar', ph:'feedBabyAvatarPh', name:'feedBabyName', meta:'feedBabyMeta'});
-}
-
-/* 打开宝宝信息编辑弹窗（含头像上传） */
-let babyAvatarDraft = null;
-function openBabyEdit(){
-  const name = document.getElementById('babyName');
-  const sex = document.getElementById('babySex');
-  const birth = document.getElementById('babyBirth');
-  const img = document.getElementById('babyAvEdit');
-  const ph = document.getElementById('babyAvEditPh');
-  name.value = babyInfo ? (babyInfo.name || '') : '';
-  birth.value = babyInfo ? (babyInfo.birth || '') : '';
-  sex.querySelectorAll('button').forEach(b=>b.classList.toggle('on', b.dataset.sex === (babyInfo ? (babyInfo.sex || '') : '')));
-  babyAvatarDraft = babyInfo ? (babyInfo.avatar || null) : null;
-  if(babyAvatarDraft){ img.src = babyAvatarDraft; img.style.display=''; ph.style.display='none'; }
-  else { img.removeAttribute('src'); img.style.display='none'; ph.style.display=''; }
-  document.getElementById('babyEditOverlay').classList.add('show');
-}
-document.getElementById('editBabyBtn').addEventListener('click', openBabyEdit);
-document.getElementById('babyAvatarWrap').addEventListener('click', openBabyEdit);
-document.getElementById('babyAvEditWrap').addEventListener('click', ()=>document.getElementById('babyAvatarInput').click());
-document.getElementById('babyAvatarInput').addEventListener('change', e=>{
-  const file = e.target.files && e.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = ev=>{
-    babyAvatarDraft = ev.target.result;
-    const img = document.getElementById('babyAvEdit');
-    const ph = document.getElementById('babyAvEditPh');
-    img.src = babyAvatarDraft; img.style.display=''; ph.style.display='none';
-  };
-  reader.readAsDataURL(file);
-});
-document.querySelectorAll('#babySex button').forEach(b=>{
-  b.onclick = ()=>{ document.querySelectorAll('#babySex button').forEach(x=>x.classList.toggle('on', x===b)); };
-});
-document.getElementById('babySave').addEventListener('click', ()=>{
-  const name = document.getElementById('babyName').value.trim();
-  const birth = document.getElementById('babyBirth').value;
-  const sexBtn = document.querySelector('#babySex button.on');
-  const sex = sexBtn ? sexBtn.dataset.sex : '';
-  if(!name && !birth && !babyAvatarDraft){ toast('请至少填写姓名或出生日期'); return; }
-  babyInfo = { name: name || '', sex, birth, avatar: babyAvatarDraft, updatedAt: Date.now() };
-  saveInfo(); renderBabyInfo();
-  document.getElementById('babyEditOverlay').classList.remove('show');
-  toast('已保存宝宝信息');
-});
-document.getElementById('babyCancel').addEventListener('click', ()=>{
-  babyInfo = { _deleted: true, updatedAt: Date.now() }; saveInfo(); renderBabyInfo();
-  document.getElementById('babyEditOverlay').classList.remove('show');
-  toast('已清除宝宝信息');
-});
-/* 点击弹窗外的遮罩区域关闭（仅丢弃草稿，不清空已保存信息） */
-document.getElementById('babyEditOverlay').addEventListener('click', e=>{ if(e.target===e.currentTarget) e.currentTarget.classList.remove('show'); });
-
-/* 添加成长记录 */
-document.getElementById('gDate').value = fmtDate(Date.now());
-document.getElementById('gAdd').addEventListener('click', ()=>{
-  const date = document.getElementById('gDate').value;
-  const w = parseFloat(document.getElementById('gWeight').value);
-  const h = parseFloat(document.getElementById('gHeight').value);
-  if(!date){ toast('请选择日期'); return; }
-  if(isNaN(w) && isNaN(h)){ toast('请至少填写体重或身高'); return; }
-  if(!isNaN(w) && w <= 0){ toast('体重需大于 0'); return; }
-  if(!isNaN(h) && h <= 0){ toast('身高需大于 0'); return; }
-  const ts = new Date(date + 'T00:00').getTime();
-  growth.push({ id: uid(), date: ts, weight: isNaN(w) ? null : w, height: isNaN(h) ? null : h, updatedAt: Date.now() });
-  growPage = 1; saveGrowth(); renderGrowth();
-  document.getElementById('gWeight').value = '';
-  document.getElementById('gHeight').value = '';
-  document.getElementById('gDate').value = fmtDate(Date.now());
-  toast('已添加记录');
-});
-
-/* ===================== WebDAV 多端同步 ===================== */
-const WEBDAV_KEY = 'bf_webdav';
-let wdBusy = false, wdTimer = null, wdLast = 0, wdErr = '', wdStatus = '';
-function getWebDav(){ try{ return JSON.parse(localStorage.getItem(WEBDAV_KEY)||'null'); }catch(e){ return null; } }
-function wdBasic(cfg){ try{ return 'Basic ' + btoa(unescape(encodeURIComponent((cfg.user||'')+':'+(cfg.pass||'')))); }catch(e){ return ''; } }
-function wdHeaders(cfg, extra){ return Object.assign({ 'Authorization': wdBasic(cfg) }, extra||{}); }
-async function wdMkcol(cfg, url){
-  try{
-    const u = new URL(url); const segs = u.pathname.split('/').filter(Boolean); segs.pop();
-    let base = u.origin;
-    for(const seg of segs){ base += '/' + seg; try{ await fetch(base, { method:'MKCOL', headers: wdHeaders(cfg) }); }catch(e){} }
-  }catch(e){}
-}
-async function wdGet(cfg){
-  const r = await fetch(cfg.url, { method:'GET', headers: wdHeaders(cfg) });
-  if(r.status === 404) return null;
-  if(!r.ok) throw new Error('下载失败 HTTP '+r.status);
-  try{ return await r.json(); }catch(e){ return null; }
-}
-async function wdPut(cfg, obj){
-  await wdMkcol(cfg, cfg.url);
-  const r = await fetch(cfg.url, { method:'PUT', headers: wdHeaders(cfg, {'Content-Type':'application/json'}), body: JSON.stringify(obj) });
-  if(!r.ok) throw new Error('上传失败 HTTP '+r.status);
-}
-function mergeBoth(local, remote){
-  const map = new Map();
-  for(const x of (local||[])) if(x && x.id) map.set(x.id, x);
-  for(const x of (remote||[])){
-    if(!x || !x.id) continue;
-    const cur = map.get(x.id);
-    if(!cur || (x.updatedAt||0) > (cur.updatedAt||0)) map.set(x.id, x);
-  }
-  const out = []; const seen = new Set();
-  for(const x of (local||[])){ if(x && x.id){ out.push(map.get(x.id)); seen.add(x.id); } }
-  for(const x of (remote||[])){ if(x && x.id && !seen.has(x.id)){ out.push(x); seen.add(x.id); } }
-  return out;
-}
-function sigArr(arr){ return (arr||[]).map(x=> x && x.id ? x.id+':'+(x.updatedAt||0)+':'+(x._deleted?1:0) : '').join('|'); }
-function scheduleSync(){
-  const cfg = getWebDav();
-  if(!cfg || !cfg.url || wdBusy) return;
-  clearTimeout(wdTimer);
-  wdTimer = setTimeout(()=>{ syncNow(); }, 1500);
-}
-async function syncNow(){
-  const cfg = getWebDav();
-  if(!cfg || !cfg.url || wdBusy) return;
-  wdBusy = true; updateWdUI('syncing');
-  const prev = inSync; inSync = true;
-  try{
-    // 宝宝信息仅保存在本地，不同步、也不从远端更新
-    const remote = await wdGet(cfg) || { sessions: [], growth: [] };
-    const ms = mergeBoth(sessions, remote.sessions);
-    const mg = mergeBoth(growth, remote.growth);
-    const localSig = sigArr(sessions)+'#'+sigArr(growth);
-    const remoteSig = sigArr(ms)+'#'+sigArr(mg);
-    if(localSig !== remoteSig){
-      sessions = ms; growth = mg;
-      save(); saveGrowth();
-      render(); renderGrowth();
-    }
-    // 锁定状态下：只读同步文件，不上传更新
-    if(locked){
-      wdLast = Date.now(); wdErr = ''; wdStatus = 'ok'; updateWdUI('ok');
-      return;
-    }
-    // 同步内容仅含喂养(sessions)与成长(growth)
-    const out = {
-      sessions: sessions.map(s=> s.updatedAt ? s : Object.assign({}, s, {updatedAt:Date.now()})),
-      growth: growth.map(g=> g.updatedAt ? g : Object.assign({}, g, {updatedAt:Date.now()}))
-    };
-    await wdPut(cfg, out);
-    wdLast = Date.now(); wdErr = ''; wdStatus = 'ok'; updateWdUI('ok');
-  }catch(e){
-    wdErr = (e && e.message) ? e.message : String(e);
-    wdStatus = 'error'; updateWdUI('error');
-  }finally{
-    inSync = prev; wdBusy = false;
-  }
-}
-function updateWdUI(status){
-  const el = document.getElementById('wdStatus'); if(!el) return;
-  const cfg = getWebDav();
-  if(!cfg || !cfg.url){ el.textContent = '未配置同步'; el.className = 'wd-status none'; return; }
-  if(status === 'syncing'){ el.textContent = '同步中…'; el.className = 'wd-status syncing'; }
-  else if(status === 'error'){ el.textContent = '同步失败：' + wdErr; el.className = 'wd-status error'; }
-  else { el.textContent = '已同步 · ' + (wdLast ? fmtClock(wdLast) : ''); el.className = 'wd-status ok'; }
-}
-let wdIntStarted = false;
-function startWdInterval(){ if(wdIntStarted) return; wdIntStarted = true; setInterval(()=>{ const c = getWebDav(); if(c && c.url) syncNow(); }, 60000); }
-(function initSync(){
-  const u = document.getElementById('wdUrl'), us = document.getElementById('wdUser'), p = document.getElementById('wdPass');
-  const cfg = getWebDav() || {};
-  if(u) u.value = cfg.url || '';
-  if(us) us.value = cfg.user || '';
-  if(p) p.value = cfg.pass || '';
-  const saveCfg = ()=>{ const c = { url: u.value.trim(), user: us.value.trim(), pass: p.value }; localStorage.setItem(WEBDAV_KEY, JSON.stringify(c)); return c; };
-  const bSave = document.getElementById('wdSave'), bNow = document.getElementById('wdNow');
-  if(bSave) bSave.addEventListener('click', ()=>{ saveCfg(); startWdInterval(); toast('已保存同步配置'); syncNow(); });
-  if(bNow) bNow.addEventListener('click', ()=>{ syncNow(); });
-  updateWdUI('');
-  if(cfg && cfg.url){ startWdInterval(); syncNow(); }
-})();
-
-/* 同步设置弹窗开关 */
-(function initSyncOverlay(){
-  const ov = document.getElementById('syncOverlay');
-  const open = ()=>{ const cfg = getWebDav() || {}; const u = document.getElementById('wdUrl'); if(u) u.value = cfg.url || ''; ov.classList.add('show'); };
-  const close = ()=> ov.classList.remove('show');
-  const bOpen = document.getElementById('syncSetBtn');
-  if(bOpen) bOpen.addEventListener('click', open);
-  const bClose = document.getElementById('syncClose');
-  if(bClose) bClose.addEventListener('click', close);
-  if(ov) ov.addEventListener('click', e=>{ if(e.target === ov) close(); });
-})();
-
-/* 锁定模式：禁用喂养页所有交互（仅查看数据），自动同步不受影响 */
-let locked = false;
-try { locked = localStorage.getItem('bf_locked') === '1'; } catch(e){}
-function applyLock(){
-  const page = document.getElementById('pageFeed');
-  if(page) page.classList.toggle('locked', locked);
-  const b = document.getElementById('lockBtn');
-  if(b){
-    b.textContent = locked ? '🔓 解锁' : '🔒 锁定';
-    b.classList.toggle('on', locked);
-  }
-}
-(function initLock(){
-  const b = document.getElementById('lockBtn');
-  if(b) b.addEventListener('click', ()=>{
-    locked = !locked;
-    try{ localStorage.setItem('bf_locked', locked ? '1' : '0'); }catch(e){}
-    applyLock();
-  });
-  applyLock();
-})();
-
-/* 记录列表 + 曲线 */
-function renderGrowth(){
-  renderGrowList();
-  drawGrowthChart();
-}
-let growPage = 1;
-const GROW_PER_PAGE = 10;
-function renderGrowList(){
-  const list = document.getElementById('growList');
-  const pager = document.getElementById('growPager');
-  const sorted = growth.slice().filter(g=>!g._deleted).sort((a,b)=>b.date - a.date);
-  const total = sorted.length;
-  const pages = Math.max(1, Math.ceil(total / GROW_PER_PAGE));
-  if(growPage > pages) growPage = pages;
-  document.getElementById('growCnt').textContent = total ? ('共 ' + total + ' 条') : '';
-  if(!total){
-    list.innerHTML = '<div class="empty">还没有成长记录<br>在上方添加体重 / 身高吧 📏</div>';
-    pager.innerHTML = '';
-    return;
-  }
-  const startIdx = (growPage - 1) * GROW_PER_PAGE;
-  const pageItems = sorted.slice(startIdx, startIdx + GROW_PER_PAGE);
-  let html = '';
-  for(const r of pageItems){
-    const d = new Date(r.date);
-    const dateStr = (d.getMonth()+1) + '月' + d.getDate() + '日';
-    const vals = [];
-    if(r.weight != null) vals.push('体重 ' + r.weight + ' kg');
-    if(r.height != null) vals.push('身高 ' + r.height + ' cm');
-    html += '<div class="gitem" data-id="'+r.id+'">'
-      + '<div class="info"><div class="date">'+dateStr+'</div>'
-      + '<div class="vals">'+vals.join(' · ')+'</div></div>'
-      + '<div class="acts"><button class="edit" data-id="'+r.id+'">修改</button>'
-      + '<button class="del" data-id="'+r.id+'">删除</button></div></div>';
-  }
-  list.innerHTML = html;
-  if(pages > 1){
-    pager.innerHTML = '<button id="gpPrev"' + (growPage<=1 ? ' disabled' : '') + '>上一页</button>'
-      + '<span class="pginfo">'+growPage+' / '+pages+'</span>'
-      + '<button id="gpNext"' + (growPage>=pages ? ' disabled' : '') + '>下一页</button>';
-  } else {
-    pager.innerHTML = '';
-  }
-}
-document.getElementById('growPager').addEventListener('click', e=>{
-  if(e.target.id === 'gpPrev' && growPage > 1){ growPage--; renderGrowList(); }
-  else if(e.target.id === 'gpNext'){ growPage++; renderGrowList(); }
-});
-document.getElementById('growList').addEventListener('click', e=>{
-  const delBtn = e.target.closest('.del');
-  const editBtn = e.target.closest('.edit');
-  if(delBtn){
-    const id = delBtn.dataset.id;
-    confirmDialog('删除这条成长记录？', ()=>{
-      growth = growth.map(x => x.id === id ? Object.assign({}, x, {_deleted:true, updatedAt:Date.now()}) : x);
-      growPage = 1; saveGrowth(); renderGrowth(); toast('已删除');
-    }, '删除记录');
-  } else if(editBtn){
-    openGrowEdit(editBtn.dataset.id);
-  }
-});
-function openGrowEdit(id){
-  const r = growth.find(x=>x.id === id); if(!r) return;
-  growEditId = id;
-  document.getElementById('geDate').value = fmtDate(r.date);
-  document.getElementById('geWeight').value = r.weight != null ? r.weight : '';
-  document.getElementById('geHeight').value = r.height != null ? r.height : '';
-  document.getElementById('growEditOverlay').classList.add('show');
-}
-document.getElementById('geCancel').addEventListener('click', ()=>document.getElementById('growEditOverlay').classList.remove('show'));
-document.getElementById('growEditOverlay').addEventListener('click', e=>{ if(e.target === e.currentTarget) e.currentTarget.classList.remove('show'); });
-document.getElementById('geSave').addEventListener('click', ()=>{
-  const r = growth.find(x=>x.id === growEditId); if(!r) return;
-  const date = document.getElementById('geDate').value;
-  if(!date){ toast('请选择日期'); return; }
-  const w = parseFloat(document.getElementById('geWeight').value);
-  const h = parseFloat(document.getElementById('geHeight').value);
-  r.date = new Date(date + 'T00:00').getTime();
-  r.weight = isNaN(w) ? null : w;
-  r.height = isNaN(h) ? null : h;
-  r.updatedAt = Date.now();
-  saveGrowth(); renderGrowth();
-  document.getElementById('growEditOverlay').classList.remove('show');
-  toast('已保存');
-});
-
-/* 导出 / 清空成长数据 */
-/* 导出 / 清空 / 导入（同时操纵喂养与成长两套数据） */
-function downloadJSON(obj, filename){
-  const json = JSON.stringify(obj, null, 2);
-  if(window.AndroidBridge && window.AndroidBridge.exportData){
-    window.AndroidBridge.exportData(json);
-  } else {
-    try{
-      const blob = new Blob([json], {type:'application/json'});
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = filename;
-      a.click();
-      URL.revokeObjectURL(a.href);
-    }catch(err){ toast('导出失败：'+err.message); }
-  }
-}
-document.getElementById('exportAllBtn').addEventListener('click', ()=>{
-  downloadJSON({ sessions: sessions, info: babyInfo, records: growth, vaccines: vaccines }, '喂养与成长与疫苗_'+fmtDate(Date.now())+'.json');
-});
-document.getElementById('clearAllBtn').addEventListener('click', ()=>{
-  confirmDialog('确定清空全部数据（喂养记录、成长记录、宝宝信息、疫苗接种）？此操作不可恢复。', ()=>{
-    sessions = []; selectedSide='L'; viewDate = startOfDay(Date.now()); save();
-    growth = []; babyInfo = null; saveGrowth(); saveInfo();
-    vaccines = []; saveVaccines(); renderVaccine();
-    renderBabyInfo(); renderGrowth(); render();
-    toast('已清空全部数据');
-  }, '清空全部数据');
-});
-/* 导入：仅导入喂养记录（兼容旧版裸数组 / 新格式 {sessions}） */
-document.getElementById('importBtn').addEventListener('click', ()=>{
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = 'application/json,.json';
-  input.onchange = e=>{
-    const file = e.target.files && e.target.files[0];
-    if(!file) return;
-    const reader = new FileReader();
-    reader.onload = ev=>{
-      try{
-        const parsed = JSON.parse(ev.target.result);
-        let arr = null;
-        if(Array.isArray(parsed)) arr = parsed;
-        else if(parsed && Array.isArray(parsed.sessions)) arr = parsed.sessions;
-        let added = 0, addedG = 0;
-        // 喂养记录
-        if(arr && arr.length){
-          const ids = new Set(sessions.map(s=>s.id));
-          for(const s of arr){
-            if(!s || s.start == null) continue;
-            const id = s.id || uid();
-            if(ids.has(id)) continue;
-            ids.add(id);
-            sessions.push(Object.assign({ id: id, updatedAt: Date.now() }, s));
-            added++;
-          }
-          if(added){ save(); render(); }
-        }
-        // 成长记录
-        if(parsed && Array.isArray(parsed.records)){
-          const gids = new Set(growth.map(g=>g.id));
-          for(const g of parsed.records){
-            if(!g || g.date == null) continue;
-            const id = g.id || uid();
-            if(gids.has(id)) continue;
-            gids.add(id);
-            growth.push(Object.assign({ id: id, updatedAt: Date.now() }, g));
-            addedG++;
-          }
-          if(addedG){ saveGrowth(); renderGrowth(); }
-        }
-        // 宝宝信息
-        if(parsed && parsed.info){
-          babyInfo = Object.assign({}, parsed.info, { updatedAt: Date.now() });
-          saveInfo(); renderBabyInfo();
-        }
-        // 疫苗接种
-        let addedV = 0;
-        if(parsed && Array.isArray(parsed.vaccines)){
-          const vids = new Set(vaccines.map(v=>v.id));
-          for(const v of parsed.vaccines){
-            if(!v || v.start == null && v.date == null) continue;
-            const id = v.id || uid();
-            if(vids.has(id)) continue;
-            vids.add(id);
-            vaccines.push(Object.assign({ id: id, updatedAt: Date.now() }, v));
-            addedV++;
-          }
-          if(addedV){ saveVaccines(); renderVaccine(); }
-        }
-        const msg = '已导入 ' + added + ' 条喂养记录' + (addedG ? '、' + addedG + ' 条成长记录' : '') + (addedV ? '、' + addedV + ' 条疫苗记录' : '') + (parsed && parsed.info ? '，宝宝信息已更新' : '');
-        if(added || addedG || addedV || (parsed && parsed.info)) toast(msg);
-        else toast('没有新的数据可导入');
-      }catch(err){ toast('解析失败：'+err.message); }
-    };
-    reader.readAsText(file);
-  };
-  input.click();
-});
-
-/* ---------- 疫苗接种页面逻辑 ---------- */
-function renderVaccine(){ renderVacList(); }
-let vacPage = 1;
-const VAC_PER_PAGE = 30;
-function renderVacList(){
-  const list = document.getElementById('vacList');
-  if(!list) return;
-  const sorted = vaccines.slice().filter(v=>!v._deleted).sort((a,b)=>b.date - a.date);
-  const total = sorted.length;
-  const cnt = document.getElementById('vacCnt');
-  if(cnt) cnt.textContent = total ? ('共 ' + total + ' 条') : '';
-  if(!total){
-    list.innerHTML = '<div class="empty">还没有接种记录<br>在上方添加第一针吧 💉</div>';
-    return;
-  }
-  const pages = Math.max(1, Math.ceil(total / VAC_PER_PAGE));
-  if(vacPage > pages) vacPage = pages;
-  const startIdx = (vacPage - 1) * VAC_PER_PAGE;
-  const items = sorted.slice(startIdx, startIdx + VAC_PER_PAGE);
-  let html = '';
-  for(const v of items){
-    const d = new Date(v.date);
-    const dateStr = (d.getMonth()+1) + '月' + d.getDate() + '日';
-    const sub = [];
-    if(v.dose) sub.push(esc(v.dose));
-    if(v.site) sub.push(esc(v.site));
-    html += '<div class="gitem" data-id="'+v.id+'">'
-      + '<div class="info"><div class="date">'+esc(v.name || '(未命名)')+' · '+dateStr+'</div>'
-      + (sub.length ? '<div class="vals">'+sub.join(' · ')+'</div>' : '')
-      + (v.note ? '<div class="vals">'+esc(v.note)+'</div>' : '')
-      + '</div>'
-      + '<div class="acts"><button class="edit" data-id="'+v.id+'">修改</button>'
-      + '<button class="del" data-id="'+v.id+'">删除</button></div></div>';
-  }
-  list.innerHTML = html;
-}
-document.getElementById('vAdd').addEventListener('click', ()=>{
-  const name = document.getElementById('vName').value.trim();
-  const date = document.getElementById('vDate').value;
-  if(!name){ toast('请填写疫苗名称'); return; }
-  if(!date){ toast('请选择接种日期'); return; }
-  const ts = new Date(date + 'T00:00').getTime();
-  vaccines.push({
-    id: uid(), name: name, date: ts,
-    dose: document.getElementById('vDose').value.trim(),
-    site: document.getElementById('vSite').value.trim(),
-    note: document.getElementById('vNote').value.trim(),
-    updatedAt: Date.now()
-  });
-  saveVaccines(); renderVaccine();
-  document.getElementById('vName').value = '';
-  document.getElementById('vDose').value = '';
-  document.getElementById('vSite').value = '';
-  document.getElementById('vNote').value = '';
-  document.getElementById('vDate').value = fmtDate(Date.now());
-  toast('已添加记录');
-});
-document.getElementById('vacList').addEventListener('click', e=>{
-  const delBtn = e.target.closest('.del');
-  const editBtn = e.target.closest('.edit');
-  if(delBtn){
-    const id = delBtn.dataset.id;
-    confirmDialog('删除这条接种记录？', ()=>{
-      vaccines = vaccines.map(x => x.id === id ? Object.assign({}, x, {_deleted:true, updatedAt:Date.now()}) : x);
-      vacPage = 1; saveVaccines(); renderVaccine(); toast('已删除');
-    }, '删除记录');
-  } else if(editBtn){
-    openVacEdit(editBtn.dataset.id);
-  }
-});
-function openVacEdit(id){
-  const v = vaccines.find(x=>x.id === id); if(!v) return;
-  vacEditId = id;
-  document.getElementById('veName').value = v.name || '';
-  document.getElementById('veDate').value = fmtDate(v.date);
-  document.getElementById('veDose').value = v.dose || '';
-  document.getElementById('veSite').value = v.site || '';
-  document.getElementById('veNote').value = v.note || '';
-  document.getElementById('vacEditOverlay').classList.add('show');
-}
-document.getElementById('veCancel').addEventListener('click', ()=>document.getElementById('vacEditOverlay').classList.remove('show'));
-document.getElementById('vacEditOverlay').addEventListener('click', e=>{ if(e.target === e.currentTarget) e.currentTarget.classList.remove('show'); });
-document.getElementById('veSave').addEventListener('click', ()=>{
-  const v = vaccines.find(x=>x.id === vacEditId); if(!v) return;
-  const name = document.getElementById('veName').value.trim();
-  const date = document.getElementById('veDate').value;
-  if(!name){ toast('请填写疫苗名称'); return; }
-  if(!date){ toast('请选择接种日期'); return; }
-  v.name = name;
-  v.date = new Date(date + 'T00:00').getTime();
-  v.dose = document.getElementById('veDose').value.trim();
-  v.site = document.getElementById('veSite').value.trim();
-  v.note = document.getElementById('veNote').value.trim();
-  v.updatedAt = Date.now();
-  saveVaccines(); renderVaccine();
-  document.getElementById('vacEditOverlay').classList.remove('show');
-  toast('已保存');
-});
-
-/* 成长曲线（Canvas，单条曲线：体重 kg 或 身高 cm，各自独立绘制） */
-function drawOneChart(cv, getVal, color, unit){
-  if(!cv) return;
-  const wrap = cv.parentElement;
-  const cssW = wrap.clientWidth || 320;
-  const cssH = 240;
-  const dpr = window.devicePixelRatio || 1;
-  cv.width = Math.round(cssW * dpr);
-  cv.height = Math.round(cssH * dpr);
-  cv.style.width = cssW + 'px';
-  cv.style.height = cssH + 'px';
-  const ctx = cv.getContext('2d');
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.clearRect(0, 0, cssW, cssH);
-
-  const cs = getComputedStyle(document.documentElement);
-  const sub = (cs.getPropertyValue('--sub') || '#999').trim();
-  const line = (cs.getPropertyValue('--line') || '#eee').trim();
-
-  const recs = growth.slice().sort((a,b)=>a.date - b.date);
-  const pts = recs.map((r,i)=>({i, v:getVal(r)})).filter(p=>p.v != null);
-  if(pts.length < 2){
-    ctx.fillStyle = sub;
-    ctx.font = '14px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('至少需要 2 条记录才能绘制' + unit + '曲线', cssW/2, cssH/2);
-    return;
-  }
-
-  const padL = 42, padR = 16, padT = 16, padB = 28;
-  const plotW = cssW - padL - padR;
-  const plotH = cssH - padT - padB;
-  const x0 = padL, y0 = padT;
-
-  function yScale(val, mn, mx){
-    if(mx === mn) return y0 + plotH/2;
-    return y0 + plotH - (val - mn) / (mx - mn) * plotH;
-  }
-  function xAt(i){ return x0 + (recs.length === 1 ? 0 : i / (recs.length - 1) * plotW); }
-
-  const vals = pts.map(p=>p.v);
-  let mn = Math.min.apply(null, vals), mx = Math.max.apply(null, vals);
-  const p = (mx - mn) * 0.15 || 1;
-  mn -= p; mx += p;
-
-  // 网格 + y 轴标签
-  const rows = 4;
-  ctx.lineWidth = 1;
-  ctx.font = '11px sans-serif';
-  for(let g = 0; g <= rows; g++){
-    const yy = y0 + plotH * g / rows;
-    ctx.strokeStyle = line;
-    ctx.beginPath(); ctx.moveTo(x0, yy); ctx.lineTo(x0 + plotW, yy); ctx.stroke();
-    const v = mx - (mx - mn) * g / rows;
-    ctx.fillStyle = color; ctx.textAlign = 'right';
-    ctx.fillText(unit === 'kg' ? v.toFixed(1) : v.toFixed(0), x0 - 6, yy + 4);
-  }
-  // x 轴日期标签
-  ctx.fillStyle = sub; ctx.textAlign = 'center';
-  const xt = Math.min(recs.length, 5);
-  for(let t = 0; t < xt; t++){
-    const i = xt === 1 ? 0 : Math.round(t * (recs.length - 1) / (xt - 1));
-    const d = new Date(recs[i].date);
-    ctx.fillText((d.getMonth()+1) + '/' + d.getDate(), xAt(i), cssH - 8);
-  }
-
-  // 曲线 + 数据点
-  ctx.strokeStyle = color; ctx.lineWidth = 2.5;
-  ctx.beginPath();
-  pts.forEach((p, idx)=>{
-    const xx = xAt(p.i), yy = yScale(p.v, mn, mx);
-    if(idx === 0) ctx.moveTo(xx, yy); else ctx.lineTo(xx, yy);
-  });
-  ctx.stroke();
-  ctx.fillStyle = color;
-  pts.forEach(p=>{
-    const xx = xAt(p.i), yy = yScale(p.v, mn, mx);
-    ctx.beginPath(); ctx.arc(xx, yy, 3.2, 0, Math.PI * 2); ctx.fill();
-  });
-}
-function drawGrowthChart(){
-  const accent = (getComputedStyle(document.documentElement).getPropertyValue('--accent') || '#ff7088').trim();
-  const blue = (getComputedStyle(document.documentElement).getPropertyValue('--L') || '#5b8def').trim();
-  drawOneChart(document.getElementById('growthChartW'), r=>r.weight, accent, 'kg');
-  drawOneChart(document.getElementById('growthChartH'), r=>r.height, blue, 'cm');
-}
-window.addEventListener('resize', ()=>{
-  if(document.getElementById('pageGrow').style.display !== 'none') drawGrowthChart();
-});
-
-/* 初始化成长页表单 */
-renderBabyInfo();
-
-render();
-</script>
 </body>
 </html>
