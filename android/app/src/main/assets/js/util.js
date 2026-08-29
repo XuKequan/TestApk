@@ -8,7 +8,16 @@
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 function buzz(ms){ try{ navigator.vibrate && navigator.vibrate(ms); }catch(e){} }
 
-function startOfDay(ts){ const d = new Date(ts); d.setHours(0,0,0,0); return d.getTime(); }
+/* 时区：强制使用北京时间（UTC+8），不受设备所在时区影响（出国也不变）。
+   所有日期显示/解析统一走北京时区；中国 UTC+8 无夏令时，与历史数据存储一致。 */
+const APP_TZ = 8 * 3600 * 1000;
+function bj(ts){ return new Date((ts == null ? Date.now() : ts) + APP_TZ); }
+/* 把「北京时间的 日期+时分」字符串解析为 UTC 毫秒（存储用） */
+function parseBJ(dateStr, timeStr){ return new Date(dateStr + 'T' + (timeStr || '00:00') + ':00+08:00').getTime(); }
+/* 当前北京时间的时/分，用于表单默认填充 */
+function bjH(){ return bj(Date.now()).getUTCHours(); }
+function bjM(){ return bj(Date.now()).getUTCMinutes(); }
+function startOfDay(ts){ const d = bj(ts); d.setUTCHours(0,0,0,0); return d.getTime() - APP_TZ; }
 function isSameDay(a,b){ return startOfDay(a) === startOfDay(b); }
 
 function pad(n){ return n<10 ? '0'+n : ''+n; }
@@ -43,23 +52,23 @@ function fmtGap(ms){
   return mins+'分钟';
 }
 function fmtClock(ts){
-  const d = new Date(ts);
-  return pad(d.getHours())+':'+pad(d.getMinutes());
+  const d = bj(ts);
+  return pad(d.getUTCHours())+':'+pad(d.getUTCMinutes());
 }
 function fmtDate(ts){
-  const d = new Date(ts);
-  return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+  const d = bj(ts);
+  return d.getUTCFullYear()+'-'+pad(d.getUTCMonth()+1)+'-'+pad(d.getUTCDate());
 }
 function fmtDateCn(ts){
-  const d = new Date(ts);
-  const wk = ['日','一','二','三','四','五','六'][d.getDay()];
-  return (d.getMonth()+1)+'月'+d.getDate()+'日 周'+wk;
+  const d = bj(ts);
+  const wk = ['日','一','二','三','四','五','六'][d.getUTCDay()];
+  return (d.getUTCMonth()+1)+'月'+d.getUTCDate()+'日 周'+wk;
 }
 /* 预约时间格式：8月15日 10:30 */
 function fmtDateTime(ts){
-  const d = new Date(ts);
-  const hh = pad(d.getHours()), mm = pad(d.getMinutes());
-  return (d.getMonth()+1)+'月'+d.getDate()+'日 '+(hh==='00'&&mm==='00'?'':hh+':'+mm);
+  const d = bj(ts);
+  const hh = pad(d.getUTCHours()), mm = pad(d.getUTCMinutes());
+  return (d.getUTCMonth()+1)+'月'+d.getUTCDate()+'日 '+(hh==='00'&&mm==='00'?'':hh+':'+mm);
 }
 function fmtRelative(ts){
   const diff = Date.now() - ts;
