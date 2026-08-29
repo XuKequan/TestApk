@@ -134,8 +134,8 @@ function renderVacList(){
   const items = sorted.slice(startIdx, startIdx + VAC_PER_PAGE);
   let html = '';
   for(const v of items){
-    const d = new Date(v.date);
-    const dateStr = (d.getMonth()+1) + '月' + d.getDate() + '日';
+    const d = bj(v.date);
+    const dateStr = (d.getUTCMonth()+1) + '月' + d.getUTCDate() + '日';
     const sub = [];
     if(v.site) sub.push(esc(v.site));
     if(v.org) sub.push(esc(v.org));
@@ -320,7 +320,7 @@ document.getElementById('vAdd').addEventListener('click', ()=>{
   if(orgSel && orgSel.value === '__add__') handleOrgAdd(orgSel);
   if(!name){ toast('请先从方案选择疫苗'); return; }
   if(!date){ toast('请选择接种日期'); return; }
-  const ts = new Date(date + 'T00:00').getTime();
+  const ts = parseBJ(date);
   vaccines.push({
     id: uid(), name: name, date: ts,
     site: document.getElementById('vSite').value,
@@ -406,11 +406,11 @@ function renderAppts(){
 }
 /* 预约名称直接取 aPick 的值，无需额外回填 */
 /* 预约日期时间：日期原生日历 + 时分线性滚轮（不循环），合并为一个选择组件 */
-let apptDT = { dateStr: fmtDate(Date.now()), h: new Date().getHours(), m: new Date().getMinutes() };
+let apptDT = { dateStr: fmtDate(Date.now()), h: bjH(), m: bjM() };
 const aDateTimeBtn = document.getElementById('aDateTimeBtn');
 function refreshApptDateTime(){
-  const d = new Date(apptDT.dateStr + 'T00:00');
-  aDateTimeBtn.textContent = (d.getMonth()+1)+'月'+d.getDate()+'日 ' + pad(apptDT.h)+':'+pad(apptDT.m);
+  const d = bj(parseBJ(apptDT.dateStr));
+  aDateTimeBtn.textContent = (d.getUTCMonth()+1)+'月'+d.getUTCDate()+'日 ' + pad(apptDT.h)+':'+pad(apptDT.m);
 }
 refreshApptDateTime();
 /* 构建预约专用时分滚轮（与补记的滚轮 DOM 独立，避免冲突） */
@@ -443,13 +443,13 @@ document.getElementById('aAdd').addEventListener('click', ()=>{
   if(orgSel && orgSel.value === '__add__') handleOrgAdd(orgSel);
   if(!name){ toast('请先从方案选择疫苗'); return; }
   if(!apptDT.dateStr){ toast('请选择预约日期'); return; }
-  const ts = new Date(apptDT.dateStr + 'T' + pad(apptDT.h) + ':' + pad(apptDT.m)).getTime();
+  const ts = parseBJ(apptDT.dateStr, pad(apptDT.h) + ':' + pad(apptDT.m));
   if(isNaN(ts)){ toast('预约时间无效'); return; }
   vacAppts.push({ id: uid(), name: name, date: ts, org: orgSel ? orgSel.value : '', done: false, createdAt: Date.now() });
   saveVacAppts(); renderVaccine();
   document.getElementById('aPick').value = '';
   document.getElementById('aOrg').value = '';
-  apptDT = { dateStr: fmtDate(Date.now()), h: new Date().getHours(), m: new Date().getMinutes() }; refreshApptDateTime();
+  apptDT = { dateStr: fmtDate(Date.now()), h: bjH(), m: bjM() }; refreshApptDateTime();
   toast('已添加预约');
 });
 /* 预约列表操作：记录接种 / 完成 / 删除 */
@@ -506,7 +506,7 @@ document.getElementById('veSave').addEventListener('click', ()=>{
   if(!name){ toast('请填写疫苗名称'); return; }
   if(!date){ toast('请选择接种日期'); return; }
   v.name = name;
-  v.date = new Date(date + 'T00:00').getTime();
+  v.date = parseBJ(date);
   v.site = document.getElementById('veSite').value;
   v.org = orgSel.value;
   v.note = document.getElementById('veNote').value;
