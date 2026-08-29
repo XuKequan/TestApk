@@ -206,13 +206,14 @@ bindTimeField('eEndD', 9, 15);
 let mSide = 'L';
 const overlay = document.getElementById('overlay');
 function openModal(){
-  const now = new Date();
-  document.getElementById('mDate').value = fmtDate(now.getTime());
-  timeFields['mStartD'].h = now.getHours(); timeFields['mStartD'].m = now.getMinutes();
-  document.getElementById('mStartD').textContent = pad(now.getHours())+':'+pad(now.getMinutes());
-  const end = new Date(now.getTime()+15*60000);
-  timeFields['mEndD'].h = end.getHours(); timeFields['mEndD'].m = end.getMinutes();
-  document.getElementById('mEndD').textContent = pad(end.getHours())+':'+pad(end.getMinutes());
+  const nh = bjH(), nm = bjM();
+  document.getElementById('mDate').value = fmtDate(Date.now());
+  timeFields['mStartD'].h = nh; timeFields['mStartD'].m = nm;
+  document.getElementById('mStartD').textContent = pad(nh)+':'+pad(nm);
+  const end = new Date(Date.now()+15*60000);
+  const eh = bj(end.getTime()).getUTCHours(), em = bj(end.getTime()).getUTCMinutes();
+  timeFields['mEndD'].h = eh; timeFields['mEndD'].m = em;
+  document.getElementById('mEndD').textContent = pad(eh)+':'+pad(em);
   mSide = 'L';
   document.querySelectorAll('#mSeg button').forEach(b=>b.classList.toggle('on', b.dataset.side==='L'));
   overlay.classList.add('show');
@@ -229,8 +230,8 @@ document.getElementById('mSave').addEventListener('click', ()=>{
   const sh = timeFields['mStartD'].h, sm = timeFields['mStartD'].m;
   const eh = timeFields['mEndD'].h, em = timeFields['mEndD'].m;
   if(!date){ toast('请选择日期'); return; }
-  const start = new Date(date+'T'+pad(sh)+':'+pad(sm)+':00').getTime();
-  const end = new Date(date+'T'+pad(eh)+':'+pad(em)+':00').getTime();
+  const start = parseBJ(date, pad(sh)+':'+pad(sm));
+  const end = parseBJ(date, pad(eh)+':'+pad(em));
   if(isNaN(start)||isNaN(end)){ toast('时间格式有误'); return; }
   if(end <= start){ toast('结束时间需晚于开始时间'); return; }
   if(end > Date.now()+60000){ toast('结束时间不能晚于现在'); return; }
@@ -241,10 +242,10 @@ document.getElementById('mSave').addEventListener('click', ()=>{
 /* ---------- 瓶喂 ---------- */
 const bottleOverlay = document.getElementById('bottleOverlay');
 function openBottle(){
-  const now = new Date();
-  document.getElementById('bDate').value = fmtDate(now.getTime());
-  timeFields['bTimeD'].h = now.getHours(); timeFields['bTimeD'].m = now.getMinutes();
-  document.getElementById('bTimeD').textContent = pad(now.getHours())+':'+pad(now.getMinutes());
+  const nh = bjH(), nm = bjM();
+  document.getElementById('bDate').value = fmtDate(Date.now());
+  timeFields['bTimeD'].h = nh; timeFields['bTimeD'].m = nm;
+  document.getElementById('bTimeD').textContent = pad(nh)+':'+pad(nm);
   document.getElementById('bVol').value = 120;
   bottleOverlay.classList.add('show');
 }
@@ -258,7 +259,7 @@ document.getElementById('bSave').addEventListener('click', ()=>{
   const vol = parseInt(document.getElementById('bVol').value,10);
   if(!date){ toast('请选择日期'); return; }
   if(!vol || vol<1){ toast('请填写容量'); return; }
-  const start = new Date(date+'T'+pad(h)+':'+pad(m)+':00').getTime();
+  const start = parseBJ(date, pad(h)+':'+pad(m));
   if(isNaN(start)){ toast('时间格式有误'); return; }
   if(start > Date.now()+60000){ toast('喂养时间不能晚于现在'); return; }
   sessions.push({id:uid(), type:'bottle', start, end:start, volume:vol, pausedTotal:0, pausedAt:null, updatedAt:Date.now()});
@@ -312,15 +313,15 @@ function openEdit(id){
   const isBottle = s.type === 'bottle';
   document.getElementById('eDate').value = fmtDate(s.start);
   // 自动带出原开始时间
-  const sd = new Date(s.start);
-  timeFields['eStartD'].h = sd.getHours();
-  timeFields['eStartD'].m = sd.getMinutes();
-  document.getElementById('eStartD').textContent = pad(sd.getHours())+':'+pad(sd.getMinutes());
+  const sd = bj(s.start);
+  timeFields['eStartD'].h = sd.getUTCHours();
+  timeFields['eStartD'].m = sd.getUTCMinutes();
+  document.getElementById('eStartD').textContent = pad(sd.getUTCHours())+':'+pad(sd.getUTCMinutes());
   // 自动带出原结束时间（无结束则沿用开始）
-  const ed = new Date(s.end != null ? s.end : s.start);
-  timeFields['eEndD'].h = ed.getHours();
-  timeFields['eEndD'].m = ed.getMinutes();
-  document.getElementById('eEndD').textContent = pad(ed.getHours())+':'+pad(ed.getMinutes());
+  const ed = bj(s.end != null ? s.end : s.start);
+  timeFields['eEndD'].h = ed.getUTCHours();
+  timeFields['eEndD'].m = ed.getUTCMinutes();
+  document.getElementById('eEndD').textContent = pad(ed.getUTCHours())+':'+pad(ed.getUTCMinutes());
   // 切换字段显示：瓶喂无结束时间/乳房，有容量
   document.getElementById('eEndField').style.display = isBottle ? 'none' : '';
   document.getElementById('eVolField').style.display = isBottle ? '' : 'none';
@@ -342,7 +343,7 @@ document.getElementById('eSave').addEventListener('click', ()=>{
   const date = document.getElementById('eDate').value;
   const h = timeFields['eStartD'].h, m = timeFields['eStartD'].m;
   if(!date){ toast('请选择日期'); return; }
-  const start = new Date(date+'T'+pad(h)+':'+pad(m)+':00').getTime();
+  const start = parseBJ(date, pad(h)+':'+pad(m));
   if(isNaN(start)){ toast('时间格式有误'); return; }
   if(s.type === 'bottle'){
     const vol = parseInt(document.getElementById('eVol').value,10);
@@ -351,7 +352,7 @@ document.getElementById('eSave').addEventListener('click', ()=>{
     s.start = start; s.end = start; s.volume = vol; s.updatedAt = Date.now();
   } else {
     const eh = timeFields['eEndD'].h, em = timeFields['eEndD'].m;
-    const end = new Date(date+'T'+pad(eh)+':'+pad(em)+':00').getTime();
+    const end = parseBJ(date, pad(eh)+':'+pad(em));
     if(isNaN(end)){ toast('时间格式有误'); return; }
     if(end <= start){ toast('结束时间需晚于开始时间'); return; }
     if(end > Date.now()+60000){ toast('结束时间不能晚于现在'); return; }
@@ -382,7 +383,7 @@ document.getElementById('dayLabel').addEventListener('click', ()=>{
   dp.showPicker ? dp.showPicker() : dp.click();
 });
 document.getElementById('dayPicker').addEventListener('change', e=>{
-  if(e.target.value){ viewDate = new Date(e.target.value+'T00:00').getTime(); render(); }
+  if(e.target.value){ viewDate = parseBJ(e.target.value); render(); }
 });
 
 /* ---------- 确认弹窗通用按钮 ---------- */
