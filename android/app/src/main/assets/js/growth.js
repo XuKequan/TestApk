@@ -106,7 +106,7 @@ document.getElementById('gAdd').addEventListener('click', ()=>{
   if(isNaN(w) && isNaN(h)){ toast('请至少填写体重或身高'); return; }
   if(!isNaN(w) && w <= 0){ toast('体重需大于 0'); return; }
   if(!isNaN(h) && h <= 0){ toast('身高需大于 0'); return; }
-  const ts = new Date(date + 'T00:00').getTime();
+  const ts = parseBJ(date);
   growth.push({ id: uid(), date: ts, weight: isNaN(w) ? null : w, height: isNaN(h) ? null : h, updatedAt: Date.now() });
   growPage = 1; saveGrowth(); renderGrowth();
   document.getElementById('gWeight').value = '';
@@ -140,8 +140,8 @@ function renderGrowList(){
   const pageItems = sorted.slice(startIdx, startIdx + GROW_PER_PAGE);
   let html = '';
   for(const r of pageItems){
-    const d = new Date(r.date);
-    const dateStr = (d.getMonth()+1) + '月' + d.getDate() + '日';
+    const d = bj(r.date);
+    const dateStr = (d.getUTCMonth()+1) + '月' + d.getUTCDate() + '日';
     const vals = [];
     if(r.weight != null) vals.push('体重 ' + r.weight + ' kg');
     if(r.height != null) vals.push('身高 ' + r.height + ' cm');
@@ -193,7 +193,7 @@ document.getElementById('geSave').addEventListener('click', ()=>{
   if(!date){ toast('请选择日期'); return; }
   const w = parseFloat(document.getElementById('geWeight').value);
   const h = parseFloat(document.getElementById('geHeight').value);
-  r.date = new Date(date + 'T00:00').getTime();
+  r.date = parseBJ(date);
   r.weight = isNaN(w) ? null : w;
   r.height = isNaN(h) ? null : h;
   r.updatedAt = Date.now();
@@ -265,8 +265,8 @@ function drawOneChart(cv, getVal, color, unit){
   const xt = Math.min(recs.length, 5);
   for(let t = 0; t < xt; t++){
     const i = xt === 1 ? 0 : Math.round(t * (recs.length - 1) / (xt - 1));
-    const d = new Date(recs[i].date);
-    ctx.fillText((d.getMonth()+1) + '/' + d.getDate(), xAt(i), cssH - 8);
+    const d = bj(recs[i].date);
+    ctx.fillText((d.getUTCMonth()+1) + '/' + d.getUTCDate(), xAt(i), cssH - 8);
   }
 
   // 曲线 + 数据点
